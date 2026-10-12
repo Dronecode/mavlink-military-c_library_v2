@@ -14,8 +14,10 @@ typedef struct __mavlink_fires_t {
  float alt; /*< [m] Target altitude, MSL.*/
  uint32_t effector_id; /*<  Identifier of the assigned effector.*/
  float cep_expected; /*< [m] Expected circular error probable at impact.*/
- uint16_t sequence; /*<  Fire mission sequence number.*/
+ uint16_t sequence; /*<  Fire mission sequence number, chosen by the issuer. 0xFFFF is reserved: in a stop it means every fire mission.*/
  uint16_t prf_code; /*<  Laser designator PRF code for SAL weapons (e.g. 1111-1788). 0 = no laser code assigned.*/
+ uint8_t target_system; /*<  System ID of the intended recipient: the effector's system. Never 0; receivers ignore a FIRES sent to every system.*/
+ uint8_t target_component; /*<  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.*/
  uint8_t store_id; /*<  Target store/bay on a multi-store carrier. 0 = system default / vehicle itself (e.g. OWA).*/
  uint8_t requested_effect; /*<  Coarse requested effect (intent), for non-artillery/OWA effectors. For call-for-fire missions use munition_class + fuze_action instead.*/
  uint8_t munition_class; /*<  Call-for-fire projectile/shell class (method of engagement). UNKNOWN if N/A.*/
@@ -25,13 +27,13 @@ typedef struct __mavlink_fires_t {
  uint8_t track_uid[16]; /*<  Globally-unique track identifier (UUID) of the TRACK_IDENTITY this message correlates to. Ties the engagement/assessment to the authorized track. All-zero if not associated.*/
 } mavlink_fires_t;
 
-#define MAVLINK_MSG_ID_FIRES_LEN 62
-#define MAVLINK_MSG_ID_FIRES_MIN_LEN 62
-#define MAVLINK_MSG_ID_53020_LEN 62
-#define MAVLINK_MSG_ID_53020_MIN_LEN 62
+#define MAVLINK_MSG_ID_FIRES_LEN 64
+#define MAVLINK_MSG_ID_FIRES_MIN_LEN 64
+#define MAVLINK_MSG_ID_53020_LEN 64
+#define MAVLINK_MSG_ID_53020_MIN_LEN 64
 
-#define MAVLINK_MSG_ID_FIRES_CRC 16
-#define MAVLINK_MSG_ID_53020_CRC 16
+#define MAVLINK_MSG_ID_FIRES_CRC 124
+#define MAVLINK_MSG_ID_53020_CRC 124
 
 #define MAVLINK_MSG_FIRES_FIELD_TRACK_UID_LEN 16
 
@@ -39,8 +41,10 @@ typedef struct __mavlink_fires_t {
 #define MAVLINK_MESSAGE_INFO_FIRES { \
     53020, \
     "FIRES", \
-    16, \
+    18, \
     {  { "time_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_fires_t, time_usec) }, \
+         { "target_system", NULL, MAVLINK_TYPE_UINT8_T, 0, 40, offsetof(mavlink_fires_t, target_system) }, \
+         { "target_component", NULL, MAVLINK_TYPE_UINT8_T, 0, 41, offsetof(mavlink_fires_t, target_component) }, \
          { "time_impact_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 8, offsetof(mavlink_fires_t, time_impact_usec) }, \
          { "lat", NULL, MAVLINK_TYPE_INT32_T, 0, 16, offsetof(mavlink_fires_t, lat) }, \
          { "lon", NULL, MAVLINK_TYPE_INT32_T, 0, 20, offsetof(mavlink_fires_t, lon) }, \
@@ -49,20 +53,22 @@ typedef struct __mavlink_fires_t {
          { "sequence", NULL, MAVLINK_TYPE_UINT16_T, 0, 36, offsetof(mavlink_fires_t, sequence) }, \
          { "cep_expected", NULL, MAVLINK_TYPE_FLOAT, 0, 32, offsetof(mavlink_fires_t, cep_expected) }, \
          { "prf_code", NULL, MAVLINK_TYPE_UINT16_T, 0, 38, offsetof(mavlink_fires_t, prf_code) }, \
-         { "store_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 40, offsetof(mavlink_fires_t, store_id) }, \
-         { "requested_effect", NULL, MAVLINK_TYPE_UINT8_T, 0, 41, offsetof(mavlink_fires_t, requested_effect) }, \
-         { "munition_class", NULL, MAVLINK_TYPE_UINT8_T, 0, 42, offsetof(mavlink_fires_t, munition_class) }, \
-         { "fuze_mode", NULL, MAVLINK_TYPE_UINT8_T, 0, 43, offsetof(mavlink_fires_t, fuze_mode) }, \
-         { "hob_intent", NULL, MAVLINK_TYPE_UINT8_T, 0, 44, offsetof(mavlink_fires_t, hob_intent) }, \
-         { "fuze_mofa_capable", NULL, MAVLINK_TYPE_UINT8_T, 0, 45, offsetof(mavlink_fires_t, fuze_mofa_capable) }, \
-         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 46, offsetof(mavlink_fires_t, track_uid) }, \
+         { "store_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 42, offsetof(mavlink_fires_t, store_id) }, \
+         { "requested_effect", NULL, MAVLINK_TYPE_UINT8_T, 0, 43, offsetof(mavlink_fires_t, requested_effect) }, \
+         { "munition_class", NULL, MAVLINK_TYPE_UINT8_T, 0, 44, offsetof(mavlink_fires_t, munition_class) }, \
+         { "fuze_mode", NULL, MAVLINK_TYPE_UINT8_T, 0, 45, offsetof(mavlink_fires_t, fuze_mode) }, \
+         { "hob_intent", NULL, MAVLINK_TYPE_UINT8_T, 0, 46, offsetof(mavlink_fires_t, hob_intent) }, \
+         { "fuze_mofa_capable", NULL, MAVLINK_TYPE_UINT8_T, 0, 47, offsetof(mavlink_fires_t, fuze_mofa_capable) }, \
+         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 48, offsetof(mavlink_fires_t, track_uid) }, \
          } \
 }
 #else
 #define MAVLINK_MESSAGE_INFO_FIRES { \
     "FIRES", \
-    16, \
+    18, \
     {  { "time_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_fires_t, time_usec) }, \
+         { "target_system", NULL, MAVLINK_TYPE_UINT8_T, 0, 40, offsetof(mavlink_fires_t, target_system) }, \
+         { "target_component", NULL, MAVLINK_TYPE_UINT8_T, 0, 41, offsetof(mavlink_fires_t, target_component) }, \
          { "time_impact_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 8, offsetof(mavlink_fires_t, time_impact_usec) }, \
          { "lat", NULL, MAVLINK_TYPE_INT32_T, 0, 16, offsetof(mavlink_fires_t, lat) }, \
          { "lon", NULL, MAVLINK_TYPE_INT32_T, 0, 20, offsetof(mavlink_fires_t, lon) }, \
@@ -71,13 +77,13 @@ typedef struct __mavlink_fires_t {
          { "sequence", NULL, MAVLINK_TYPE_UINT16_T, 0, 36, offsetof(mavlink_fires_t, sequence) }, \
          { "cep_expected", NULL, MAVLINK_TYPE_FLOAT, 0, 32, offsetof(mavlink_fires_t, cep_expected) }, \
          { "prf_code", NULL, MAVLINK_TYPE_UINT16_T, 0, 38, offsetof(mavlink_fires_t, prf_code) }, \
-         { "store_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 40, offsetof(mavlink_fires_t, store_id) }, \
-         { "requested_effect", NULL, MAVLINK_TYPE_UINT8_T, 0, 41, offsetof(mavlink_fires_t, requested_effect) }, \
-         { "munition_class", NULL, MAVLINK_TYPE_UINT8_T, 0, 42, offsetof(mavlink_fires_t, munition_class) }, \
-         { "fuze_mode", NULL, MAVLINK_TYPE_UINT8_T, 0, 43, offsetof(mavlink_fires_t, fuze_mode) }, \
-         { "hob_intent", NULL, MAVLINK_TYPE_UINT8_T, 0, 44, offsetof(mavlink_fires_t, hob_intent) }, \
-         { "fuze_mofa_capable", NULL, MAVLINK_TYPE_UINT8_T, 0, 45, offsetof(mavlink_fires_t, fuze_mofa_capable) }, \
-         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 46, offsetof(mavlink_fires_t, track_uid) }, \
+         { "store_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 42, offsetof(mavlink_fires_t, store_id) }, \
+         { "requested_effect", NULL, MAVLINK_TYPE_UINT8_T, 0, 43, offsetof(mavlink_fires_t, requested_effect) }, \
+         { "munition_class", NULL, MAVLINK_TYPE_UINT8_T, 0, 44, offsetof(mavlink_fires_t, munition_class) }, \
+         { "fuze_mode", NULL, MAVLINK_TYPE_UINT8_T, 0, 45, offsetof(mavlink_fires_t, fuze_mode) }, \
+         { "hob_intent", NULL, MAVLINK_TYPE_UINT8_T, 0, 46, offsetof(mavlink_fires_t, hob_intent) }, \
+         { "fuze_mofa_capable", NULL, MAVLINK_TYPE_UINT8_T, 0, 47, offsetof(mavlink_fires_t, fuze_mofa_capable) }, \
+         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 48, offsetof(mavlink_fires_t, track_uid) }, \
          } \
 }
 #endif
@@ -89,12 +95,14 @@ typedef struct __mavlink_fires_t {
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the effector's system. Never 0; receivers ignore a FIRES sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
  * @param time_impact_usec [us] Expected time of impact (UNIX epoch, microseconds UTC).
  * @param lat [degE7] Target latitude, WGS84.
  * @param lon [degE7] Target longitude, WGS84.
  * @param alt [m] Target altitude, MSL.
  * @param effector_id  Identifier of the assigned effector.
- * @param sequence  Fire mission sequence number.
+ * @param sequence  Fire mission sequence number, chosen by the issuer. 0xFFFF is reserved: in a stop it means every fire mission.
  * @param cep_expected [m] Expected circular error probable at impact.
  * @param prf_code  Laser designator PRF code for SAL weapons (e.g. 1111-1788). 0 = no laser code assigned.
  * @param store_id  Target store/bay on a multi-store carrier. 0 = system default / vehicle itself (e.g. OWA).
@@ -107,7 +115,7 @@ typedef struct __mavlink_fires_t {
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_fires_pack(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg,
-                               uint64_t time_usec, uint64_t time_impact_usec, int32_t lat, int32_t lon, float alt, uint32_t effector_id, uint16_t sequence, float cep_expected, uint16_t prf_code, uint8_t store_id, uint8_t requested_effect, uint8_t munition_class, uint8_t fuze_mode, uint8_t hob_intent, uint8_t fuze_mofa_capable, const uint8_t *track_uid)
+                               uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint64_t time_impact_usec, int32_t lat, int32_t lon, float alt, uint32_t effector_id, uint16_t sequence, float cep_expected, uint16_t prf_code, uint8_t store_id, uint8_t requested_effect, uint8_t munition_class, uint8_t fuze_mode, uint8_t hob_intent, uint8_t fuze_mofa_capable, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_FIRES_LEN];
@@ -120,13 +128,15 @@ static inline uint16_t mavlink_msg_fires_pack(uint32_t system_id, uint8_t compon
     _mav_put_float(buf, 32, cep_expected);
     _mav_put_uint16_t(buf, 36, sequence);
     _mav_put_uint16_t(buf, 38, prf_code);
-    _mav_put_uint8_t(buf, 40, store_id);
-    _mav_put_uint8_t(buf, 41, requested_effect);
-    _mav_put_uint8_t(buf, 42, munition_class);
-    _mav_put_uint8_t(buf, 43, fuze_mode);
-    _mav_put_uint8_t(buf, 44, hob_intent);
-    _mav_put_uint8_t(buf, 45, fuze_mofa_capable);
-    _mav_put_uint8_t_array(buf, 46, track_uid, 16);
+    _mav_put_uint8_t(buf, 40, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 41, target_component);
+    _mav_put_uint8_t(buf, 42, store_id);
+    _mav_put_uint8_t(buf, 43, requested_effect);
+    _mav_put_uint8_t(buf, 44, munition_class);
+    _mav_put_uint8_t(buf, 45, fuze_mode);
+    _mav_put_uint8_t(buf, 46, hob_intent);
+    _mav_put_uint8_t(buf, 47, fuze_mofa_capable);
+    _mav_put_uint8_t_array(buf, 48, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_FIRES_LEN);
 #else
     mavlink_fires_t packet;
@@ -139,6 +149,8 @@ static inline uint16_t mavlink_msg_fires_pack(uint32_t system_id, uint8_t compon
     packet.cep_expected = cep_expected;
     packet.sequence = sequence;
     packet.prf_code = prf_code;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.store_id = store_id;
     packet.requested_effect = requested_effect;
     packet.munition_class = munition_class;
@@ -150,7 +162,7 @@ static inline uint16_t mavlink_msg_fires_pack(uint32_t system_id, uint8_t compon
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_FIRES;
-    return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC);
+    return mavlink_finalize_message_target(msg, system_id, component_id, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC, target_system);
 }
 
 /**
@@ -161,12 +173,14 @@ static inline uint16_t mavlink_msg_fires_pack(uint32_t system_id, uint8_t compon
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the effector's system. Never 0; receivers ignore a FIRES sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
  * @param time_impact_usec [us] Expected time of impact (UNIX epoch, microseconds UTC).
  * @param lat [degE7] Target latitude, WGS84.
  * @param lon [degE7] Target longitude, WGS84.
  * @param alt [m] Target altitude, MSL.
  * @param effector_id  Identifier of the assigned effector.
- * @param sequence  Fire mission sequence number.
+ * @param sequence  Fire mission sequence number, chosen by the issuer. 0xFFFF is reserved: in a stop it means every fire mission.
  * @param cep_expected [m] Expected circular error probable at impact.
  * @param prf_code  Laser designator PRF code for SAL weapons (e.g. 1111-1788). 0 = no laser code assigned.
  * @param store_id  Target store/bay on a multi-store carrier. 0 = system default / vehicle itself (e.g. OWA).
@@ -179,7 +193,7 @@ static inline uint16_t mavlink_msg_fires_pack(uint32_t system_id, uint8_t compon
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_fires_pack_status(uint32_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
-                               uint64_t time_usec, uint64_t time_impact_usec, int32_t lat, int32_t lon, float alt, uint32_t effector_id, uint16_t sequence, float cep_expected, uint16_t prf_code, uint8_t store_id, uint8_t requested_effect, uint8_t munition_class, uint8_t fuze_mode, uint8_t hob_intent, uint8_t fuze_mofa_capable, const uint8_t *track_uid)
+                               uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint64_t time_impact_usec, int32_t lat, int32_t lon, float alt, uint32_t effector_id, uint16_t sequence, float cep_expected, uint16_t prf_code, uint8_t store_id, uint8_t requested_effect, uint8_t munition_class, uint8_t fuze_mode, uint8_t hob_intent, uint8_t fuze_mofa_capable, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_FIRES_LEN];
@@ -192,13 +206,15 @@ static inline uint16_t mavlink_msg_fires_pack_status(uint32_t system_id, uint8_t
     _mav_put_float(buf, 32, cep_expected);
     _mav_put_uint16_t(buf, 36, sequence);
     _mav_put_uint16_t(buf, 38, prf_code);
-    _mav_put_uint8_t(buf, 40, store_id);
-    _mav_put_uint8_t(buf, 41, requested_effect);
-    _mav_put_uint8_t(buf, 42, munition_class);
-    _mav_put_uint8_t(buf, 43, fuze_mode);
-    _mav_put_uint8_t(buf, 44, hob_intent);
-    _mav_put_uint8_t(buf, 45, fuze_mofa_capable);
-    _mav_put_uint8_t_array(buf, 46, track_uid, 16);
+    _mav_put_uint8_t(buf, 40, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 41, target_component);
+    _mav_put_uint8_t(buf, 42, store_id);
+    _mav_put_uint8_t(buf, 43, requested_effect);
+    _mav_put_uint8_t(buf, 44, munition_class);
+    _mav_put_uint8_t(buf, 45, fuze_mode);
+    _mav_put_uint8_t(buf, 46, hob_intent);
+    _mav_put_uint8_t(buf, 47, fuze_mofa_capable);
+    _mav_put_uint8_t_array(buf, 48, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_FIRES_LEN);
 #else
     mavlink_fires_t packet;
@@ -211,6 +227,8 @@ static inline uint16_t mavlink_msg_fires_pack_status(uint32_t system_id, uint8_t
     packet.cep_expected = cep_expected;
     packet.sequence = sequence;
     packet.prf_code = prf_code;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.store_id = store_id;
     packet.requested_effect = requested_effect;
     packet.munition_class = munition_class;
@@ -223,9 +241,9 @@ static inline uint16_t mavlink_msg_fires_pack_status(uint32_t system_id, uint8_t
 
     msg->msgid = MAVLINK_MSG_ID_FIRES;
 #if MAVLINK_CRC_EXTRA
-    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC);
+    return mavlink_finalize_message_buffer_target(msg, system_id, component_id, _status, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC, target_system);
 #else
-    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, 0);
+    return mavlink_finalize_message_buffer_target(msg, system_id, component_id, _status, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, 0, target_system);
 #endif
 }
 
@@ -236,12 +254,14 @@ static inline uint16_t mavlink_msg_fires_pack_status(uint32_t system_id, uint8_t
  * @param chan The MAVLink channel this message will be sent over
  * @param msg The MAVLink message to compress the data into
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the effector's system. Never 0; receivers ignore a FIRES sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
  * @param time_impact_usec [us] Expected time of impact (UNIX epoch, microseconds UTC).
  * @param lat [degE7] Target latitude, WGS84.
  * @param lon [degE7] Target longitude, WGS84.
  * @param alt [m] Target altitude, MSL.
  * @param effector_id  Identifier of the assigned effector.
- * @param sequence  Fire mission sequence number.
+ * @param sequence  Fire mission sequence number, chosen by the issuer. 0xFFFF is reserved: in a stop it means every fire mission.
  * @param cep_expected [m] Expected circular error probable at impact.
  * @param prf_code  Laser designator PRF code for SAL weapons (e.g. 1111-1788). 0 = no laser code assigned.
  * @param store_id  Target store/bay on a multi-store carrier. 0 = system default / vehicle itself (e.g. OWA).
@@ -255,7 +275,7 @@ static inline uint16_t mavlink_msg_fires_pack_status(uint32_t system_id, uint8_t
  */
 static inline uint16_t mavlink_msg_fires_pack_chan(uint32_t system_id, uint8_t component_id, uint8_t chan,
                                mavlink_message_t* msg,
-                                   uint64_t time_usec,uint64_t time_impact_usec,int32_t lat,int32_t lon,float alt,uint32_t effector_id,uint16_t sequence,float cep_expected,uint16_t prf_code,uint8_t store_id,uint8_t requested_effect,uint8_t munition_class,uint8_t fuze_mode,uint8_t hob_intent,uint8_t fuze_mofa_capable,const uint8_t *track_uid)
+                                   uint64_t time_usec,uint32_t target_system,uint8_t target_component,uint64_t time_impact_usec,int32_t lat,int32_t lon,float alt,uint32_t effector_id,uint16_t sequence,float cep_expected,uint16_t prf_code,uint8_t store_id,uint8_t requested_effect,uint8_t munition_class,uint8_t fuze_mode,uint8_t hob_intent,uint8_t fuze_mofa_capable,const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_FIRES_LEN];
@@ -268,13 +288,15 @@ static inline uint16_t mavlink_msg_fires_pack_chan(uint32_t system_id, uint8_t c
     _mav_put_float(buf, 32, cep_expected);
     _mav_put_uint16_t(buf, 36, sequence);
     _mav_put_uint16_t(buf, 38, prf_code);
-    _mav_put_uint8_t(buf, 40, store_id);
-    _mav_put_uint8_t(buf, 41, requested_effect);
-    _mav_put_uint8_t(buf, 42, munition_class);
-    _mav_put_uint8_t(buf, 43, fuze_mode);
-    _mav_put_uint8_t(buf, 44, hob_intent);
-    _mav_put_uint8_t(buf, 45, fuze_mofa_capable);
-    _mav_put_uint8_t_array(buf, 46, track_uid, 16);
+    _mav_put_uint8_t(buf, 40, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 41, target_component);
+    _mav_put_uint8_t(buf, 42, store_id);
+    _mav_put_uint8_t(buf, 43, requested_effect);
+    _mav_put_uint8_t(buf, 44, munition_class);
+    _mav_put_uint8_t(buf, 45, fuze_mode);
+    _mav_put_uint8_t(buf, 46, hob_intent);
+    _mav_put_uint8_t(buf, 47, fuze_mofa_capable);
+    _mav_put_uint8_t_array(buf, 48, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_FIRES_LEN);
 #else
     mavlink_fires_t packet;
@@ -287,6 +309,8 @@ static inline uint16_t mavlink_msg_fires_pack_chan(uint32_t system_id, uint8_t c
     packet.cep_expected = cep_expected;
     packet.sequence = sequence;
     packet.prf_code = prf_code;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.store_id = store_id;
     packet.requested_effect = requested_effect;
     packet.munition_class = munition_class;
@@ -298,7 +322,7 @@ static inline uint16_t mavlink_msg_fires_pack_chan(uint32_t system_id, uint8_t c
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_FIRES;
-    return mavlink_finalize_message_chan(msg, system_id, component_id, chan, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC);
+    return mavlink_finalize_message_chan_target(msg, system_id, component_id, chan, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC, target_system);
 }
 
 /**
@@ -311,7 +335,7 @@ static inline uint16_t mavlink_msg_fires_pack_chan(uint32_t system_id, uint8_t c
  */
 static inline uint16_t mavlink_msg_fires_encode(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg, const mavlink_fires_t* fires)
 {
-    return mavlink_msg_fires_pack(system_id, component_id, msg, fires->time_usec, fires->time_impact_usec, fires->lat, fires->lon, fires->alt, fires->effector_id, fires->sequence, fires->cep_expected, fires->prf_code, fires->store_id, fires->requested_effect, fires->munition_class, fires->fuze_mode, fires->hob_intent, fires->fuze_mofa_capable, fires->track_uid);
+    return mavlink_msg_fires_pack(system_id, component_id, msg, fires->time_usec, fires->target_system, fires->target_component, fires->time_impact_usec, fires->lat, fires->lon, fires->alt, fires->effector_id, fires->sequence, fires->cep_expected, fires->prf_code, fires->store_id, fires->requested_effect, fires->munition_class, fires->fuze_mode, fires->hob_intent, fires->fuze_mofa_capable, fires->track_uid);
 }
 
 /**
@@ -325,7 +349,7 @@ static inline uint16_t mavlink_msg_fires_encode(uint32_t system_id, uint8_t comp
  */
 static inline uint16_t mavlink_msg_fires_encode_chan(uint32_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, const mavlink_fires_t* fires)
 {
-    return mavlink_msg_fires_pack_chan(system_id, component_id, chan, msg, fires->time_usec, fires->time_impact_usec, fires->lat, fires->lon, fires->alt, fires->effector_id, fires->sequence, fires->cep_expected, fires->prf_code, fires->store_id, fires->requested_effect, fires->munition_class, fires->fuze_mode, fires->hob_intent, fires->fuze_mofa_capable, fires->track_uid);
+    return mavlink_msg_fires_pack_chan(system_id, component_id, chan, msg, fires->time_usec, fires->target_system, fires->target_component, fires->time_impact_usec, fires->lat, fires->lon, fires->alt, fires->effector_id, fires->sequence, fires->cep_expected, fires->prf_code, fires->store_id, fires->requested_effect, fires->munition_class, fires->fuze_mode, fires->hob_intent, fires->fuze_mofa_capable, fires->track_uid);
 }
 
 /**
@@ -339,7 +363,7 @@ static inline uint16_t mavlink_msg_fires_encode_chan(uint32_t system_id, uint8_t
  */
 static inline uint16_t mavlink_msg_fires_encode_status(uint32_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_fires_t* fires)
 {
-    return mavlink_msg_fires_pack_status(system_id, component_id, _status, msg,  fires->time_usec, fires->time_impact_usec, fires->lat, fires->lon, fires->alt, fires->effector_id, fires->sequence, fires->cep_expected, fires->prf_code, fires->store_id, fires->requested_effect, fires->munition_class, fires->fuze_mode, fires->hob_intent, fires->fuze_mofa_capable, fires->track_uid);
+    return mavlink_msg_fires_pack_status(system_id, component_id, _status, msg,  fires->time_usec, fires->target_system, fires->target_component, fires->time_impact_usec, fires->lat, fires->lon, fires->alt, fires->effector_id, fires->sequence, fires->cep_expected, fires->prf_code, fires->store_id, fires->requested_effect, fires->munition_class, fires->fuze_mode, fires->hob_intent, fires->fuze_mofa_capable, fires->track_uid);
 }
 
 /**
@@ -347,12 +371,14 @@ static inline uint16_t mavlink_msg_fires_encode_status(uint32_t system_id, uint8
  * @param chan MAVLink channel to send the message
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the effector's system. Never 0; receivers ignore a FIRES sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
  * @param time_impact_usec [us] Expected time of impact (UNIX epoch, microseconds UTC).
  * @param lat [degE7] Target latitude, WGS84.
  * @param lon [degE7] Target longitude, WGS84.
  * @param alt [m] Target altitude, MSL.
  * @param effector_id  Identifier of the assigned effector.
- * @param sequence  Fire mission sequence number.
+ * @param sequence  Fire mission sequence number, chosen by the issuer. 0xFFFF is reserved: in a stop it means every fire mission.
  * @param cep_expected [m] Expected circular error probable at impact.
  * @param prf_code  Laser designator PRF code for SAL weapons (e.g. 1111-1788). 0 = no laser code assigned.
  * @param store_id  Target store/bay on a multi-store carrier. 0 = system default / vehicle itself (e.g. OWA).
@@ -365,7 +391,7 @@ static inline uint16_t mavlink_msg_fires_encode_status(uint32_t system_id, uint8
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-static inline void mavlink_msg_fires_send(mavlink_channel_t chan, uint64_t time_usec, uint64_t time_impact_usec, int32_t lat, int32_t lon, float alt, uint32_t effector_id, uint16_t sequence, float cep_expected, uint16_t prf_code, uint8_t store_id, uint8_t requested_effect, uint8_t munition_class, uint8_t fuze_mode, uint8_t hob_intent, uint8_t fuze_mofa_capable, const uint8_t *track_uid)
+static inline void mavlink_msg_fires_send(mavlink_channel_t chan, uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint64_t time_impact_usec, int32_t lat, int32_t lon, float alt, uint32_t effector_id, uint16_t sequence, float cep_expected, uint16_t prf_code, uint8_t store_id, uint8_t requested_effect, uint8_t munition_class, uint8_t fuze_mode, uint8_t hob_intent, uint8_t fuze_mofa_capable, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_FIRES_LEN];
@@ -378,14 +404,16 @@ static inline void mavlink_msg_fires_send(mavlink_channel_t chan, uint64_t time_
     _mav_put_float(buf, 32, cep_expected);
     _mav_put_uint16_t(buf, 36, sequence);
     _mav_put_uint16_t(buf, 38, prf_code);
-    _mav_put_uint8_t(buf, 40, store_id);
-    _mav_put_uint8_t(buf, 41, requested_effect);
-    _mav_put_uint8_t(buf, 42, munition_class);
-    _mav_put_uint8_t(buf, 43, fuze_mode);
-    _mav_put_uint8_t(buf, 44, hob_intent);
-    _mav_put_uint8_t(buf, 45, fuze_mofa_capable);
-    _mav_put_uint8_t_array(buf, 46, track_uid, 16);
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_FIRES, buf, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC);
+    _mav_put_uint8_t(buf, 40, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 41, target_component);
+    _mav_put_uint8_t(buf, 42, store_id);
+    _mav_put_uint8_t(buf, 43, requested_effect);
+    _mav_put_uint8_t(buf, 44, munition_class);
+    _mav_put_uint8_t(buf, 45, fuze_mode);
+    _mav_put_uint8_t(buf, 46, hob_intent);
+    _mav_put_uint8_t(buf, 47, fuze_mofa_capable);
+    _mav_put_uint8_t_array(buf, 48, track_uid, 16);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_FIRES, buf, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC, target_system);
 #else
     mavlink_fires_t packet;
     packet.time_usec = time_usec;
@@ -397,6 +425,8 @@ static inline void mavlink_msg_fires_send(mavlink_channel_t chan, uint64_t time_
     packet.cep_expected = cep_expected;
     packet.sequence = sequence;
     packet.prf_code = prf_code;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.store_id = store_id;
     packet.requested_effect = requested_effect;
     packet.munition_class = munition_class;
@@ -404,7 +434,7 @@ static inline void mavlink_msg_fires_send(mavlink_channel_t chan, uint64_t time_
     packet.hob_intent = hob_intent;
     packet.fuze_mofa_capable = fuze_mofa_capable;
     mav_array_memcpy(packet.track_uid, track_uid, sizeof(uint8_t)*16);
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_FIRES, (const char *)&packet, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_FIRES, (const char *)&packet, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC, target_system);
 #endif
 }
 
@@ -416,7 +446,7 @@ static inline void mavlink_msg_fires_send(mavlink_channel_t chan, uint64_t time_
 static inline void mavlink_msg_fires_send_struct(mavlink_channel_t chan, const mavlink_fires_t* fires)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
-    mavlink_msg_fires_send(chan, fires->time_usec, fires->time_impact_usec, fires->lat, fires->lon, fires->alt, fires->effector_id, fires->sequence, fires->cep_expected, fires->prf_code, fires->store_id, fires->requested_effect, fires->munition_class, fires->fuze_mode, fires->hob_intent, fires->fuze_mofa_capable, fires->track_uid);
+    mavlink_msg_fires_send(chan, fires->time_usec, fires->target_system, fires->target_component, fires->time_impact_usec, fires->lat, fires->lon, fires->alt, fires->effector_id, fires->sequence, fires->cep_expected, fires->prf_code, fires->store_id, fires->requested_effect, fires->munition_class, fires->fuze_mode, fires->hob_intent, fires->fuze_mofa_capable, fires->track_uid);
 #else
     _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_FIRES, (const char *)fires, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC);
 #endif
@@ -430,7 +460,7 @@ static inline void mavlink_msg_fires_send_struct(mavlink_channel_t chan, const m
   is usually the receive buffer for the channel, and allows a reply to an
   incoming message with minimum stack space usage.
  */
-static inline void mavlink_msg_fires_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint64_t time_usec, uint64_t time_impact_usec, int32_t lat, int32_t lon, float alt, uint32_t effector_id, uint16_t sequence, float cep_expected, uint16_t prf_code, uint8_t store_id, uint8_t requested_effect, uint8_t munition_class, uint8_t fuze_mode, uint8_t hob_intent, uint8_t fuze_mofa_capable, const uint8_t *track_uid)
+static inline void mavlink_msg_fires_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint64_t time_impact_usec, int32_t lat, int32_t lon, float alt, uint32_t effector_id, uint16_t sequence, float cep_expected, uint16_t prf_code, uint8_t store_id, uint8_t requested_effect, uint8_t munition_class, uint8_t fuze_mode, uint8_t hob_intent, uint8_t fuze_mofa_capable, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char *buf = (char *)msgbuf;
@@ -443,14 +473,16 @@ static inline void mavlink_msg_fires_send_buf(mavlink_message_t *msgbuf, mavlink
     _mav_put_float(buf, 32, cep_expected);
     _mav_put_uint16_t(buf, 36, sequence);
     _mav_put_uint16_t(buf, 38, prf_code);
-    _mav_put_uint8_t(buf, 40, store_id);
-    _mav_put_uint8_t(buf, 41, requested_effect);
-    _mav_put_uint8_t(buf, 42, munition_class);
-    _mav_put_uint8_t(buf, 43, fuze_mode);
-    _mav_put_uint8_t(buf, 44, hob_intent);
-    _mav_put_uint8_t(buf, 45, fuze_mofa_capable);
-    _mav_put_uint8_t_array(buf, 46, track_uid, 16);
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_FIRES, buf, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC);
+    _mav_put_uint8_t(buf, 40, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 41, target_component);
+    _mav_put_uint8_t(buf, 42, store_id);
+    _mav_put_uint8_t(buf, 43, requested_effect);
+    _mav_put_uint8_t(buf, 44, munition_class);
+    _mav_put_uint8_t(buf, 45, fuze_mode);
+    _mav_put_uint8_t(buf, 46, hob_intent);
+    _mav_put_uint8_t(buf, 47, fuze_mofa_capable);
+    _mav_put_uint8_t_array(buf, 48, track_uid, 16);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_FIRES, buf, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC, target_system);
 #else
     mavlink_fires_t *packet = (mavlink_fires_t *)msgbuf;
     packet->time_usec = time_usec;
@@ -462,6 +494,8 @@ static inline void mavlink_msg_fires_send_buf(mavlink_message_t *msgbuf, mavlink
     packet->cep_expected = cep_expected;
     packet->sequence = sequence;
     packet->prf_code = prf_code;
+    packet->target_system = mavlink_msg_target_field(target_system);
+    packet->target_component = target_component;
     packet->store_id = store_id;
     packet->requested_effect = requested_effect;
     packet->munition_class = munition_class;
@@ -469,7 +503,7 @@ static inline void mavlink_msg_fires_send_buf(mavlink_message_t *msgbuf, mavlink
     packet->hob_intent = hob_intent;
     packet->fuze_mofa_capable = fuze_mofa_capable;
     mav_array_memcpy(packet->track_uid, track_uid, sizeof(uint8_t)*16);
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_FIRES, (const char *)packet, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_FIRES, (const char *)packet, MAVLINK_MSG_ID_FIRES_MIN_LEN, MAVLINK_MSG_ID_FIRES_LEN, MAVLINK_MSG_ID_FIRES_CRC, target_system);
 #endif
 }
 #endif
@@ -487,6 +521,16 @@ static inline void mavlink_msg_fires_send_buf(mavlink_message_t *msgbuf, mavlink
 static inline uint64_t mavlink_msg_fires_get_time_usec(const mavlink_message_t* msg)
 {
     return _MAV_RETURN_uint64_t(msg,  0);
+}
+
+/**
+ * @brief Get field target_component from fires message
+ *
+ * @return  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ */
+static inline uint8_t mavlink_msg_fires_get_target_component(const mavlink_message_t* msg)
+{
+    return _MAV_RETURN_uint8_t(msg,  41);
 }
 
 /**
@@ -542,7 +586,7 @@ static inline uint32_t mavlink_msg_fires_get_effector_id(const mavlink_message_t
 /**
  * @brief Get field sequence from fires message
  *
- * @return  Fire mission sequence number.
+ * @return  Fire mission sequence number, chosen by the issuer. 0xFFFF is reserved: in a stop it means every fire mission.
  */
 static inline uint16_t mavlink_msg_fires_get_sequence(const mavlink_message_t* msg)
 {
@@ -576,7 +620,7 @@ static inline uint16_t mavlink_msg_fires_get_prf_code(const mavlink_message_t* m
  */
 static inline uint8_t mavlink_msg_fires_get_store_id(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  40);
+    return _MAV_RETURN_uint8_t(msg,  42);
 }
 
 /**
@@ -586,7 +630,7 @@ static inline uint8_t mavlink_msg_fires_get_store_id(const mavlink_message_t* ms
  */
 static inline uint8_t mavlink_msg_fires_get_requested_effect(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  41);
+    return _MAV_RETURN_uint8_t(msg,  43);
 }
 
 /**
@@ -596,7 +640,7 @@ static inline uint8_t mavlink_msg_fires_get_requested_effect(const mavlink_messa
  */
 static inline uint8_t mavlink_msg_fires_get_munition_class(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  42);
+    return _MAV_RETURN_uint8_t(msg,  44);
 }
 
 /**
@@ -606,7 +650,7 @@ static inline uint8_t mavlink_msg_fires_get_munition_class(const mavlink_message
  */
 static inline uint8_t mavlink_msg_fires_get_fuze_mode(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  43);
+    return _MAV_RETURN_uint8_t(msg,  45);
 }
 
 /**
@@ -616,7 +660,7 @@ static inline uint8_t mavlink_msg_fires_get_fuze_mode(const mavlink_message_t* m
  */
 static inline uint8_t mavlink_msg_fires_get_hob_intent(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  44);
+    return _MAV_RETURN_uint8_t(msg,  46);
 }
 
 /**
@@ -626,7 +670,7 @@ static inline uint8_t mavlink_msg_fires_get_hob_intent(const mavlink_message_t* 
  */
 static inline uint8_t mavlink_msg_fires_get_fuze_mofa_capable(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  45);
+    return _MAV_RETURN_uint8_t(msg,  47);
 }
 
 /**
@@ -636,7 +680,7 @@ static inline uint8_t mavlink_msg_fires_get_fuze_mofa_capable(const mavlink_mess
  */
 static inline uint16_t mavlink_msg_fires_get_track_uid(const mavlink_message_t* msg, uint8_t *track_uid)
 {
-    return _MAV_RETURN_uint8_t_array(msg, track_uid, 16,  46);
+    return _MAV_RETURN_uint8_t_array(msg, track_uid, 16,  48);
 }
 
 /**
@@ -657,6 +701,8 @@ static inline void mavlink_msg_fires_decode(const mavlink_message_t* msg, mavlin
     fires->cep_expected = mavlink_msg_fires_get_cep_expected(msg);
     fires->sequence = mavlink_msg_fires_get_sequence(msg);
     fires->prf_code = mavlink_msg_fires_get_prf_code(msg);
+    fires->target_system = _MAV_RETURN_uint8_t(msg, 40);
+    fires->target_component = mavlink_msg_fires_get_target_component(msg);
     fires->store_id = mavlink_msg_fires_get_store_id(msg);
     fires->requested_effect = mavlink_msg_fires_get_requested_effect(msg);
     fires->munition_class = mavlink_msg_fires_get_munition_class(msg);
@@ -669,5 +715,11 @@ static inline void mavlink_msg_fires_decode(const mavlink_message_t* msg, mavlin
         memset(fires, 0, MAVLINK_MSG_ID_FIRES_LEN);
     memcpy(fires, _MAV_PAYLOAD(msg), len);
 #endif
+    if (msg->incompat_flags & MAVLINK_IFLAG_TARGET32) {
+        // This uint8_t field cannot retain a wide target. The sentinel is NOT reserved.
+        // For routing use mavlink_msg_get_target_sysid(msg, mavlink_get_msg_entry(msg->msgid)).
+        // To relay after edits, pass that full target to _pack*(); _encode*() loses it.
+        fires->target_system = mavlink_msg_target_field(msg->target_sysid);
+    }
 
 }

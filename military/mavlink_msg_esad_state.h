@@ -8,12 +8,12 @@
 
 typedef struct __mavlink_esad_state_t {
  uint64_t time_usec; /*< [us] Timestamp (UNIX epoch, microseconds UTC).*/
- uint32_t arming_challenge_hash; /*<  Challenge hash for arming authentication of this ESAD instance.*/
+ uint32_t arming_challenge_hash; /*<  Challenge for this ESAD instance, which an ARM or an ESAD_CONFIG must carry. It ties a command to this state and is not secret.*/
  uint32_t fault_flags; /*<  Active fault flag bitmask.*/
  float input_1; /*<  Analog/digital input 1 (implementation-defined). For the standard safety inputs use the typed fields below instead.*/
  float input_2; /*<  Analog/digital input 2 (implementation-defined). For the standard safety inputs use the typed fields below instead.*/
  int16_t arm_delay_remaining_s; /*< [s] Live arming-delay countdown: seconds remaining after the in-flight-event signal until arming is permitted. -1 = not counting / not applicable. Distinct from arm_delay_setting (the switch position).*/
- uint8_t esad_id; /*<  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. Systems that support broadcast arming set the same arming_challenge_hash on each target ESAD before accepting ESAD_ARMING.esad_id = 0.*/
+ uint8_t esad_id; /*<  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. A system that accepts ESAD_ARMING or ESAD_CONFIG with esad_id = 0 sets the same arming_challenge_hash on every ESAD such a command can select.*/
  uint8_t sw_version_hash[8]; /*<  Software version as 8-byte short Git hash.*/
  uint8_t arming_status; /*<  Current arming state.*/
  uint8_t munition_status; /*<  Current munition state.*/
@@ -23,7 +23,7 @@ typedef struct __mavlink_esad_state_t {
  uint8_t pin_state; /*<  Physical safety pull-pin state (read-only status).*/
  uint8_t arm_delay_setting; /*<  Selected arming-delay switch position (90/60/30 s). The chosen setting.*/
  uint8_t trigger_distance_mode; /*<  Trigger-distance standoff mode currently in effect (coarse selection, not a distance value).*/
- uint8_t track_uid[16]; /*<  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track.*/
+ uint8_t track_uid[16]; /*<  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track, and cleared to all-zero when the store is disarmed.*/
 } mavlink_esad_state_t;
 
 #define MAVLINK_MSG_ID_ESAD_STATE_LEN 59
@@ -93,8 +93,8 @@ typedef struct __mavlink_esad_state_t {
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
- * @param esad_id  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. Systems that support broadcast arming set the same arming_challenge_hash on each target ESAD before accepting ESAD_ARMING.esad_id = 0.
- * @param arming_challenge_hash  Challenge hash for arming authentication of this ESAD instance.
+ * @param esad_id  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. A system that accepts ESAD_ARMING or ESAD_CONFIG with esad_id = 0 sets the same arming_challenge_hash on every ESAD such a command can select.
+ * @param arming_challenge_hash  Challenge for this ESAD instance, which an ARM or an ESAD_CONFIG must carry. It ties a command to this state and is not secret.
  * @param fault_flags  Active fault flag bitmask.
  * @param input_1  Analog/digital input 1 (implementation-defined). For the standard safety inputs use the typed fields below instead.
  * @param input_2  Analog/digital input 2 (implementation-defined). For the standard safety inputs use the typed fields below instead.
@@ -108,7 +108,7 @@ typedef struct __mavlink_esad_state_t {
  * @param arm_delay_setting  Selected arming-delay switch position (90/60/30 s). The chosen setting.
  * @param arm_delay_remaining_s [s] Live arming-delay countdown: seconds remaining after the in-flight-event signal until arming is permitted. -1 = not counting / not applicable. Distinct from arm_delay_setting (the switch position).
  * @param trigger_distance_mode  Trigger-distance standoff mode currently in effect (coarse selection, not a distance value).
- * @param track_uid  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track.
+ * @param track_uid  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track, and cleared to all-zero when the store is disarmed.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_esad_state_pack(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg,
@@ -168,8 +168,8 @@ static inline uint16_t mavlink_msg_esad_state_pack(uint32_t system_id, uint8_t c
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
- * @param esad_id  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. Systems that support broadcast arming set the same arming_challenge_hash on each target ESAD before accepting ESAD_ARMING.esad_id = 0.
- * @param arming_challenge_hash  Challenge hash for arming authentication of this ESAD instance.
+ * @param esad_id  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. A system that accepts ESAD_ARMING or ESAD_CONFIG with esad_id = 0 sets the same arming_challenge_hash on every ESAD such a command can select.
+ * @param arming_challenge_hash  Challenge for this ESAD instance, which an ARM or an ESAD_CONFIG must carry. It ties a command to this state and is not secret.
  * @param fault_flags  Active fault flag bitmask.
  * @param input_1  Analog/digital input 1 (implementation-defined). For the standard safety inputs use the typed fields below instead.
  * @param input_2  Analog/digital input 2 (implementation-defined). For the standard safety inputs use the typed fields below instead.
@@ -183,7 +183,7 @@ static inline uint16_t mavlink_msg_esad_state_pack(uint32_t system_id, uint8_t c
  * @param arm_delay_setting  Selected arming-delay switch position (90/60/30 s). The chosen setting.
  * @param arm_delay_remaining_s [s] Live arming-delay countdown: seconds remaining after the in-flight-event signal until arming is permitted. -1 = not counting / not applicable. Distinct from arm_delay_setting (the switch position).
  * @param trigger_distance_mode  Trigger-distance standoff mode currently in effect (coarse selection, not a distance value).
- * @param track_uid  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track.
+ * @param track_uid  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track, and cleared to all-zero when the store is disarmed.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_esad_state_pack_status(uint32_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
@@ -246,8 +246,8 @@ static inline uint16_t mavlink_msg_esad_state_pack_status(uint32_t system_id, ui
  * @param chan The MAVLink channel this message will be sent over
  * @param msg The MAVLink message to compress the data into
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
- * @param esad_id  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. Systems that support broadcast arming set the same arming_challenge_hash on each target ESAD before accepting ESAD_ARMING.esad_id = 0.
- * @param arming_challenge_hash  Challenge hash for arming authentication of this ESAD instance.
+ * @param esad_id  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. A system that accepts ESAD_ARMING or ESAD_CONFIG with esad_id = 0 sets the same arming_challenge_hash on every ESAD such a command can select.
+ * @param arming_challenge_hash  Challenge for this ESAD instance, which an ARM or an ESAD_CONFIG must carry. It ties a command to this state and is not secret.
  * @param fault_flags  Active fault flag bitmask.
  * @param input_1  Analog/digital input 1 (implementation-defined). For the standard safety inputs use the typed fields below instead.
  * @param input_2  Analog/digital input 2 (implementation-defined). For the standard safety inputs use the typed fields below instead.
@@ -261,7 +261,7 @@ static inline uint16_t mavlink_msg_esad_state_pack_status(uint32_t system_id, ui
  * @param arm_delay_setting  Selected arming-delay switch position (90/60/30 s). The chosen setting.
  * @param arm_delay_remaining_s [s] Live arming-delay countdown: seconds remaining after the in-flight-event signal until arming is permitted. -1 = not counting / not applicable. Distinct from arm_delay_setting (the switch position).
  * @param trigger_distance_mode  Trigger-distance standoff mode currently in effect (coarse selection, not a distance value).
- * @param track_uid  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track.
+ * @param track_uid  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track, and cleared to all-zero when the store is disarmed.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_esad_state_pack_chan(uint32_t system_id, uint8_t component_id, uint8_t chan,
@@ -360,8 +360,8 @@ static inline uint16_t mavlink_msg_esad_state_encode_status(uint32_t system_id, 
  * @param chan MAVLink channel to send the message
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
- * @param esad_id  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. Systems that support broadcast arming set the same arming_challenge_hash on each target ESAD before accepting ESAD_ARMING.esad_id = 0.
- * @param arming_challenge_hash  Challenge hash for arming authentication of this ESAD instance.
+ * @param esad_id  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. A system that accepts ESAD_ARMING or ESAD_CONFIG with esad_id = 0 sets the same arming_challenge_hash on every ESAD such a command can select.
+ * @param arming_challenge_hash  Challenge for this ESAD instance, which an ARM or an ESAD_CONFIG must carry. It ties a command to this state and is not secret.
  * @param fault_flags  Active fault flag bitmask.
  * @param input_1  Analog/digital input 1 (implementation-defined). For the standard safety inputs use the typed fields below instead.
  * @param input_2  Analog/digital input 2 (implementation-defined). For the standard safety inputs use the typed fields below instead.
@@ -375,7 +375,7 @@ static inline uint16_t mavlink_msg_esad_state_encode_status(uint32_t system_id, 
  * @param arm_delay_setting  Selected arming-delay switch position (90/60/30 s). The chosen setting.
  * @param arm_delay_remaining_s [s] Live arming-delay countdown: seconds remaining after the in-flight-event signal until arming is permitted. -1 = not counting / not applicable. Distinct from arm_delay_setting (the switch position).
  * @param trigger_distance_mode  Trigger-distance standoff mode currently in effect (coarse selection, not a distance value).
- * @param track_uid  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track.
+ * @param track_uid  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track, and cleared to all-zero when the store is disarmed.
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
@@ -510,7 +510,7 @@ static inline uint64_t mavlink_msg_esad_state_get_time_usec(const mavlink_messag
 /**
  * @brief Get field esad_id from esad_state message
  *
- * @return  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. Systems that support broadcast arming set the same arming_challenge_hash on each target ESAD before accepting ESAD_ARMING.esad_id = 0.
+ * @return  Vehicle-local ESAD instance identifier. Must be 1-254. 0 is invalid for ESAD_STATE, 255 is reserved. A system that accepts ESAD_ARMING or ESAD_CONFIG with esad_id = 0 sets the same arming_challenge_hash on every ESAD such a command can select.
  */
 static inline uint8_t mavlink_msg_esad_state_get_esad_id(const mavlink_message_t* msg)
 {
@@ -520,7 +520,7 @@ static inline uint8_t mavlink_msg_esad_state_get_esad_id(const mavlink_message_t
 /**
  * @brief Get field arming_challenge_hash from esad_state message
  *
- * @return  Challenge hash for arming authentication of this ESAD instance.
+ * @return  Challenge for this ESAD instance, which an ARM or an ESAD_CONFIG must carry. It ties a command to this state and is not secret.
  */
 static inline uint32_t mavlink_msg_esad_state_get_arming_challenge_hash(const mavlink_message_t* msg)
 {
@@ -660,7 +660,7 @@ static inline uint8_t mavlink_msg_esad_state_get_trigger_distance_mode(const mav
 /**
  * @brief Get field track_uid from esad_state message
  *
- * @return  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track.
+ * @return  Track UID (UUID) of the engagement this store is armed for, when applicable. Ties the armed state to a specific authorized track so a monitoring station sees "armed against track X," not merely "an ESAD is hot." All-zero if not associated with a track, and cleared to all-zero when the store is disarmed.
  */
 static inline uint16_t mavlink_msg_esad_state_get_track_uid(const mavlink_message_t* msg, uint8_t *track_uid)
 {

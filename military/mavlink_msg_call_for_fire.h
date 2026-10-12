@@ -16,6 +16,8 @@ typedef struct __mavlink_call_for_fire_t {
  uint16_t sheaf_attitude_cdeg; /*< [cdeg] Linear-target sheaf attitude (special sheaf), centidegrees [0..35999]. 0xFFFF = N/A (0 is a valid attitude, due north).*/
  uint16_t ot_direction_cdeg; /*< [cdeg] Virtual observer-target direction (bearing observer/drone to target), centidegrees [0..35999]. Lets the gateway orient VMF K02.22 relative corrections (Add/Drop, L/R) from an absolute-coordinate edge feed. 0xFFFF = not provided (0 is a valid bearing, due north).*/
  uint16_t ot_factor_dm; /*< [dm] Observer-target factor: OT range / 1000, in decimeters of shift per mil. Supports relative-correction math at the gateway. 0xFFFF = not provided.*/
+ uint8_t target_system; /*<  System ID of the intended recipient: the fire direction center. Never 0; receivers ignore a call for fire sent to every system.*/
+ uint8_t target_component; /*<  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.*/
  uint8_t mission_type; /*<  Warning-order mission type.*/
  uint8_t location_method; /*<  Method of target location.*/
  uint8_t adjustment_type; /*<  Area vs precision.*/
@@ -29,13 +31,13 @@ typedef struct __mavlink_call_for_fire_t {
  uint8_t track_uid[16]; /*<  Globally-unique track identifier (UUID) of the TRACK_IDENTITY this message correlates to. Ties the engagement/assessment to the authorized track. All-zero if not associated.*/
 } mavlink_call_for_fire_t;
 
-#define MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN 50
-#define MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN 50
-#define MAVLINK_MSG_ID_53024_LEN 50
-#define MAVLINK_MSG_ID_53024_MIN_LEN 50
+#define MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN 52
+#define MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN 52
+#define MAVLINK_MSG_ID_53024_LEN 52
+#define MAVLINK_MSG_ID_53024_MIN_LEN 52
 
-#define MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC 236
-#define MAVLINK_MSG_ID_53024_CRC 236
+#define MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC 74
+#define MAVLINK_MSG_ID_53024_CRC 74
 
 #define MAVLINK_MSG_CALL_FOR_FIRE_FIELD_TRACK_UID_LEN 16
 
@@ -43,53 +45,57 @@ typedef struct __mavlink_call_for_fire_t {
 #define MAVLINK_MESSAGE_INFO_CALL_FOR_FIRE { \
     53024, \
     "CALL_FOR_FIRE", \
-    20, \
+    22, \
     {  { "time_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_call_for_fire_t, time_usec) }, \
+         { "target_system", NULL, MAVLINK_TYPE_UINT8_T, 0, 24, offsetof(mavlink_call_for_fire_t, target_system) }, \
+         { "target_component", NULL, MAVLINK_TYPE_UINT8_T, 0, 25, offsetof(mavlink_call_for_fire_t, target_component) }, \
          { "sequence", NULL, MAVLINK_TYPE_UINT16_T, 0, 8, offsetof(mavlink_call_for_fire_t, sequence) }, \
-         { "mission_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 24, offsetof(mavlink_call_for_fire_t, mission_type) }, \
-         { "location_method", NULL, MAVLINK_TYPE_UINT8_T, 0, 25, offsetof(mavlink_call_for_fire_t, location_method) }, \
-         { "adjustment_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 26, offsetof(mavlink_call_for_fire_t, adjustment_type) }, \
-         { "trajectory", NULL, MAVLINK_TYPE_UINT8_T, 0, 27, offsetof(mavlink_call_for_fire_t, trajectory) }, \
-         { "sheaf", NULL, MAVLINK_TYPE_UINT8_T, 0, 28, offsetof(mavlink_call_for_fire_t, sheaf) }, \
-         { "control_method", NULL, MAVLINK_TYPE_UINT8_T, 0, 29, offsetof(mavlink_call_for_fire_t, control_method) }, \
-         { "danger_close", NULL, MAVLINK_TYPE_UINT8_T, 0, 30, offsetof(mavlink_call_for_fire_t, danger_close) }, \
+         { "mission_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 26, offsetof(mavlink_call_for_fire_t, mission_type) }, \
+         { "location_method", NULL, MAVLINK_TYPE_UINT8_T, 0, 27, offsetof(mavlink_call_for_fire_t, location_method) }, \
+         { "adjustment_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 28, offsetof(mavlink_call_for_fire_t, adjustment_type) }, \
+         { "trajectory", NULL, MAVLINK_TYPE_UINT8_T, 0, 29, offsetof(mavlink_call_for_fire_t, trajectory) }, \
+         { "sheaf", NULL, MAVLINK_TYPE_UINT8_T, 0, 30, offsetof(mavlink_call_for_fire_t, sheaf) }, \
+         { "control_method", NULL, MAVLINK_TYPE_UINT8_T, 0, 31, offsetof(mavlink_call_for_fire_t, control_method) }, \
+         { "danger_close", NULL, MAVLINK_TYPE_UINT8_T, 0, 32, offsetof(mavlink_call_for_fire_t, danger_close) }, \
          { "rounds", NULL, MAVLINK_TYPE_UINT16_T, 0, 10, offsetof(mavlink_call_for_fire_t, rounds) }, \
          { "duration_s", NULL, MAVLINK_TYPE_UINT16_T, 0, 12, offsetof(mavlink_call_for_fire_t, duration_s) }, \
-         { "tle_category", NULL, MAVLINK_TYPE_UINT8_T, 0, 31, offsetof(mavlink_call_for_fire_t, tle_category) }, \
-         { "mensurated", NULL, MAVLINK_TYPE_UINT8_T, 0, 32, offsetof(mavlink_call_for_fire_t, mensurated) }, \
+         { "tle_category", NULL, MAVLINK_TYPE_UINT8_T, 0, 33, offsetof(mavlink_call_for_fire_t, tle_category) }, \
+         { "mensurated", NULL, MAVLINK_TYPE_UINT8_T, 0, 34, offsetof(mavlink_call_for_fire_t, mensurated) }, \
          { "sheaf_length_m", NULL, MAVLINK_TYPE_UINT16_T, 0, 14, offsetof(mavlink_call_for_fire_t, sheaf_length_m) }, \
          { "sheaf_width_m", NULL, MAVLINK_TYPE_UINT16_T, 0, 16, offsetof(mavlink_call_for_fire_t, sheaf_width_m) }, \
          { "sheaf_attitude_cdeg", NULL, MAVLINK_TYPE_UINT16_T, 0, 18, offsetof(mavlink_call_for_fire_t, sheaf_attitude_cdeg) }, \
          { "ot_direction_cdeg", NULL, MAVLINK_TYPE_UINT16_T, 0, 20, offsetof(mavlink_call_for_fire_t, ot_direction_cdeg) }, \
          { "ot_factor_dm", NULL, MAVLINK_TYPE_UINT16_T, 0, 22, offsetof(mavlink_call_for_fire_t, ot_factor_dm) }, \
-         { "effect_verb", NULL, MAVLINK_TYPE_UINT8_T, 0, 33, offsetof(mavlink_call_for_fire_t, effect_verb) }, \
-         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 34, offsetof(mavlink_call_for_fire_t, track_uid) }, \
+         { "effect_verb", NULL, MAVLINK_TYPE_UINT8_T, 0, 35, offsetof(mavlink_call_for_fire_t, effect_verb) }, \
+         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 36, offsetof(mavlink_call_for_fire_t, track_uid) }, \
          } \
 }
 #else
 #define MAVLINK_MESSAGE_INFO_CALL_FOR_FIRE { \
     "CALL_FOR_FIRE", \
-    20, \
+    22, \
     {  { "time_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_call_for_fire_t, time_usec) }, \
+         { "target_system", NULL, MAVLINK_TYPE_UINT8_T, 0, 24, offsetof(mavlink_call_for_fire_t, target_system) }, \
+         { "target_component", NULL, MAVLINK_TYPE_UINT8_T, 0, 25, offsetof(mavlink_call_for_fire_t, target_component) }, \
          { "sequence", NULL, MAVLINK_TYPE_UINT16_T, 0, 8, offsetof(mavlink_call_for_fire_t, sequence) }, \
-         { "mission_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 24, offsetof(mavlink_call_for_fire_t, mission_type) }, \
-         { "location_method", NULL, MAVLINK_TYPE_UINT8_T, 0, 25, offsetof(mavlink_call_for_fire_t, location_method) }, \
-         { "adjustment_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 26, offsetof(mavlink_call_for_fire_t, adjustment_type) }, \
-         { "trajectory", NULL, MAVLINK_TYPE_UINT8_T, 0, 27, offsetof(mavlink_call_for_fire_t, trajectory) }, \
-         { "sheaf", NULL, MAVLINK_TYPE_UINT8_T, 0, 28, offsetof(mavlink_call_for_fire_t, sheaf) }, \
-         { "control_method", NULL, MAVLINK_TYPE_UINT8_T, 0, 29, offsetof(mavlink_call_for_fire_t, control_method) }, \
-         { "danger_close", NULL, MAVLINK_TYPE_UINT8_T, 0, 30, offsetof(mavlink_call_for_fire_t, danger_close) }, \
+         { "mission_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 26, offsetof(mavlink_call_for_fire_t, mission_type) }, \
+         { "location_method", NULL, MAVLINK_TYPE_UINT8_T, 0, 27, offsetof(mavlink_call_for_fire_t, location_method) }, \
+         { "adjustment_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 28, offsetof(mavlink_call_for_fire_t, adjustment_type) }, \
+         { "trajectory", NULL, MAVLINK_TYPE_UINT8_T, 0, 29, offsetof(mavlink_call_for_fire_t, trajectory) }, \
+         { "sheaf", NULL, MAVLINK_TYPE_UINT8_T, 0, 30, offsetof(mavlink_call_for_fire_t, sheaf) }, \
+         { "control_method", NULL, MAVLINK_TYPE_UINT8_T, 0, 31, offsetof(mavlink_call_for_fire_t, control_method) }, \
+         { "danger_close", NULL, MAVLINK_TYPE_UINT8_T, 0, 32, offsetof(mavlink_call_for_fire_t, danger_close) }, \
          { "rounds", NULL, MAVLINK_TYPE_UINT16_T, 0, 10, offsetof(mavlink_call_for_fire_t, rounds) }, \
          { "duration_s", NULL, MAVLINK_TYPE_UINT16_T, 0, 12, offsetof(mavlink_call_for_fire_t, duration_s) }, \
-         { "tle_category", NULL, MAVLINK_TYPE_UINT8_T, 0, 31, offsetof(mavlink_call_for_fire_t, tle_category) }, \
-         { "mensurated", NULL, MAVLINK_TYPE_UINT8_T, 0, 32, offsetof(mavlink_call_for_fire_t, mensurated) }, \
+         { "tle_category", NULL, MAVLINK_TYPE_UINT8_T, 0, 33, offsetof(mavlink_call_for_fire_t, tle_category) }, \
+         { "mensurated", NULL, MAVLINK_TYPE_UINT8_T, 0, 34, offsetof(mavlink_call_for_fire_t, mensurated) }, \
          { "sheaf_length_m", NULL, MAVLINK_TYPE_UINT16_T, 0, 14, offsetof(mavlink_call_for_fire_t, sheaf_length_m) }, \
          { "sheaf_width_m", NULL, MAVLINK_TYPE_UINT16_T, 0, 16, offsetof(mavlink_call_for_fire_t, sheaf_width_m) }, \
          { "sheaf_attitude_cdeg", NULL, MAVLINK_TYPE_UINT16_T, 0, 18, offsetof(mavlink_call_for_fire_t, sheaf_attitude_cdeg) }, \
          { "ot_direction_cdeg", NULL, MAVLINK_TYPE_UINT16_T, 0, 20, offsetof(mavlink_call_for_fire_t, ot_direction_cdeg) }, \
          { "ot_factor_dm", NULL, MAVLINK_TYPE_UINT16_T, 0, 22, offsetof(mavlink_call_for_fire_t, ot_factor_dm) }, \
-         { "effect_verb", NULL, MAVLINK_TYPE_UINT8_T, 0, 33, offsetof(mavlink_call_for_fire_t, effect_verb) }, \
-         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 34, offsetof(mavlink_call_for_fire_t, track_uid) }, \
+         { "effect_verb", NULL, MAVLINK_TYPE_UINT8_T, 0, 35, offsetof(mavlink_call_for_fire_t, effect_verb) }, \
+         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 36, offsetof(mavlink_call_for_fire_t, track_uid) }, \
          } \
 }
 #endif
@@ -101,6 +107,8 @@ typedef struct __mavlink_call_for_fire_t {
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the fire direction center. Never 0; receivers ignore a call for fire sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
  * @param sequence  Fire-mission sequence number this CFF applies to.
  * @param mission_type  Warning-order mission type.
  * @param location_method  Method of target location.
@@ -123,7 +131,7 @@ typedef struct __mavlink_call_for_fire_t {
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_call_for_fire_pack(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg,
-                               uint64_t time_usec, uint16_t sequence, uint8_t mission_type, uint8_t location_method, uint8_t adjustment_type, uint8_t trajectory, uint8_t sheaf, uint8_t control_method, uint8_t danger_close, uint16_t rounds, uint16_t duration_s, uint8_t tle_category, uint8_t mensurated, uint16_t sheaf_length_m, uint16_t sheaf_width_m, uint16_t sheaf_attitude_cdeg, uint16_t ot_direction_cdeg, uint16_t ot_factor_dm, uint8_t effect_verb, const uint8_t *track_uid)
+                               uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint16_t sequence, uint8_t mission_type, uint8_t location_method, uint8_t adjustment_type, uint8_t trajectory, uint8_t sheaf, uint8_t control_method, uint8_t danger_close, uint16_t rounds, uint16_t duration_s, uint8_t tle_category, uint8_t mensurated, uint16_t sheaf_length_m, uint16_t sheaf_width_m, uint16_t sheaf_attitude_cdeg, uint16_t ot_direction_cdeg, uint16_t ot_factor_dm, uint8_t effect_verb, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN];
@@ -136,17 +144,19 @@ static inline uint16_t mavlink_msg_call_for_fire_pack(uint32_t system_id, uint8_
     _mav_put_uint16_t(buf, 18, sheaf_attitude_cdeg);
     _mav_put_uint16_t(buf, 20, ot_direction_cdeg);
     _mav_put_uint16_t(buf, 22, ot_factor_dm);
-    _mav_put_uint8_t(buf, 24, mission_type);
-    _mav_put_uint8_t(buf, 25, location_method);
-    _mav_put_uint8_t(buf, 26, adjustment_type);
-    _mav_put_uint8_t(buf, 27, trajectory);
-    _mav_put_uint8_t(buf, 28, sheaf);
-    _mav_put_uint8_t(buf, 29, control_method);
-    _mav_put_uint8_t(buf, 30, danger_close);
-    _mav_put_uint8_t(buf, 31, tle_category);
-    _mav_put_uint8_t(buf, 32, mensurated);
-    _mav_put_uint8_t(buf, 33, effect_verb);
-    _mav_put_uint8_t_array(buf, 34, track_uid, 16);
+    _mav_put_uint8_t(buf, 24, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 25, target_component);
+    _mav_put_uint8_t(buf, 26, mission_type);
+    _mav_put_uint8_t(buf, 27, location_method);
+    _mav_put_uint8_t(buf, 28, adjustment_type);
+    _mav_put_uint8_t(buf, 29, trajectory);
+    _mav_put_uint8_t(buf, 30, sheaf);
+    _mav_put_uint8_t(buf, 31, control_method);
+    _mav_put_uint8_t(buf, 32, danger_close);
+    _mav_put_uint8_t(buf, 33, tle_category);
+    _mav_put_uint8_t(buf, 34, mensurated);
+    _mav_put_uint8_t(buf, 35, effect_verb);
+    _mav_put_uint8_t_array(buf, 36, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN);
 #else
     mavlink_call_for_fire_t packet;
@@ -159,6 +169,8 @@ static inline uint16_t mavlink_msg_call_for_fire_pack(uint32_t system_id, uint8_
     packet.sheaf_attitude_cdeg = sheaf_attitude_cdeg;
     packet.ot_direction_cdeg = ot_direction_cdeg;
     packet.ot_factor_dm = ot_factor_dm;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.mission_type = mission_type;
     packet.location_method = location_method;
     packet.adjustment_type = adjustment_type;
@@ -174,7 +186,7 @@ static inline uint16_t mavlink_msg_call_for_fire_pack(uint32_t system_id, uint8_
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_CALL_FOR_FIRE;
-    return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC);
+    return mavlink_finalize_message_target(msg, system_id, component_id, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC, target_system);
 }
 
 /**
@@ -185,6 +197,8 @@ static inline uint16_t mavlink_msg_call_for_fire_pack(uint32_t system_id, uint8_
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the fire direction center. Never 0; receivers ignore a call for fire sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
  * @param sequence  Fire-mission sequence number this CFF applies to.
  * @param mission_type  Warning-order mission type.
  * @param location_method  Method of target location.
@@ -207,7 +221,7 @@ static inline uint16_t mavlink_msg_call_for_fire_pack(uint32_t system_id, uint8_
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_call_for_fire_pack_status(uint32_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
-                               uint64_t time_usec, uint16_t sequence, uint8_t mission_type, uint8_t location_method, uint8_t adjustment_type, uint8_t trajectory, uint8_t sheaf, uint8_t control_method, uint8_t danger_close, uint16_t rounds, uint16_t duration_s, uint8_t tle_category, uint8_t mensurated, uint16_t sheaf_length_m, uint16_t sheaf_width_m, uint16_t sheaf_attitude_cdeg, uint16_t ot_direction_cdeg, uint16_t ot_factor_dm, uint8_t effect_verb, const uint8_t *track_uid)
+                               uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint16_t sequence, uint8_t mission_type, uint8_t location_method, uint8_t adjustment_type, uint8_t trajectory, uint8_t sheaf, uint8_t control_method, uint8_t danger_close, uint16_t rounds, uint16_t duration_s, uint8_t tle_category, uint8_t mensurated, uint16_t sheaf_length_m, uint16_t sheaf_width_m, uint16_t sheaf_attitude_cdeg, uint16_t ot_direction_cdeg, uint16_t ot_factor_dm, uint8_t effect_verb, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN];
@@ -220,17 +234,19 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_status(uint32_t system_id,
     _mav_put_uint16_t(buf, 18, sheaf_attitude_cdeg);
     _mav_put_uint16_t(buf, 20, ot_direction_cdeg);
     _mav_put_uint16_t(buf, 22, ot_factor_dm);
-    _mav_put_uint8_t(buf, 24, mission_type);
-    _mav_put_uint8_t(buf, 25, location_method);
-    _mav_put_uint8_t(buf, 26, adjustment_type);
-    _mav_put_uint8_t(buf, 27, trajectory);
-    _mav_put_uint8_t(buf, 28, sheaf);
-    _mav_put_uint8_t(buf, 29, control_method);
-    _mav_put_uint8_t(buf, 30, danger_close);
-    _mav_put_uint8_t(buf, 31, tle_category);
-    _mav_put_uint8_t(buf, 32, mensurated);
-    _mav_put_uint8_t(buf, 33, effect_verb);
-    _mav_put_uint8_t_array(buf, 34, track_uid, 16);
+    _mav_put_uint8_t(buf, 24, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 25, target_component);
+    _mav_put_uint8_t(buf, 26, mission_type);
+    _mav_put_uint8_t(buf, 27, location_method);
+    _mav_put_uint8_t(buf, 28, adjustment_type);
+    _mav_put_uint8_t(buf, 29, trajectory);
+    _mav_put_uint8_t(buf, 30, sheaf);
+    _mav_put_uint8_t(buf, 31, control_method);
+    _mav_put_uint8_t(buf, 32, danger_close);
+    _mav_put_uint8_t(buf, 33, tle_category);
+    _mav_put_uint8_t(buf, 34, mensurated);
+    _mav_put_uint8_t(buf, 35, effect_verb);
+    _mav_put_uint8_t_array(buf, 36, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN);
 #else
     mavlink_call_for_fire_t packet;
@@ -243,6 +259,8 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_status(uint32_t system_id,
     packet.sheaf_attitude_cdeg = sheaf_attitude_cdeg;
     packet.ot_direction_cdeg = ot_direction_cdeg;
     packet.ot_factor_dm = ot_factor_dm;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.mission_type = mission_type;
     packet.location_method = location_method;
     packet.adjustment_type = adjustment_type;
@@ -259,9 +277,9 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_status(uint32_t system_id,
 
     msg->msgid = MAVLINK_MSG_ID_CALL_FOR_FIRE;
 #if MAVLINK_CRC_EXTRA
-    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC);
+    return mavlink_finalize_message_buffer_target(msg, system_id, component_id, _status, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC, target_system);
 #else
-    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, 0);
+    return mavlink_finalize_message_buffer_target(msg, system_id, component_id, _status, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, 0, target_system);
 #endif
 }
 
@@ -272,6 +290,8 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_status(uint32_t system_id,
  * @param chan The MAVLink channel this message will be sent over
  * @param msg The MAVLink message to compress the data into
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the fire direction center. Never 0; receivers ignore a call for fire sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
  * @param sequence  Fire-mission sequence number this CFF applies to.
  * @param mission_type  Warning-order mission type.
  * @param location_method  Method of target location.
@@ -295,7 +315,7 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_status(uint32_t system_id,
  */
 static inline uint16_t mavlink_msg_call_for_fire_pack_chan(uint32_t system_id, uint8_t component_id, uint8_t chan,
                                mavlink_message_t* msg,
-                                   uint64_t time_usec,uint16_t sequence,uint8_t mission_type,uint8_t location_method,uint8_t adjustment_type,uint8_t trajectory,uint8_t sheaf,uint8_t control_method,uint8_t danger_close,uint16_t rounds,uint16_t duration_s,uint8_t tle_category,uint8_t mensurated,uint16_t sheaf_length_m,uint16_t sheaf_width_m,uint16_t sheaf_attitude_cdeg,uint16_t ot_direction_cdeg,uint16_t ot_factor_dm,uint8_t effect_verb,const uint8_t *track_uid)
+                                   uint64_t time_usec,uint32_t target_system,uint8_t target_component,uint16_t sequence,uint8_t mission_type,uint8_t location_method,uint8_t adjustment_type,uint8_t trajectory,uint8_t sheaf,uint8_t control_method,uint8_t danger_close,uint16_t rounds,uint16_t duration_s,uint8_t tle_category,uint8_t mensurated,uint16_t sheaf_length_m,uint16_t sheaf_width_m,uint16_t sheaf_attitude_cdeg,uint16_t ot_direction_cdeg,uint16_t ot_factor_dm,uint8_t effect_verb,const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN];
@@ -308,17 +328,19 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_chan(uint32_t system_id, u
     _mav_put_uint16_t(buf, 18, sheaf_attitude_cdeg);
     _mav_put_uint16_t(buf, 20, ot_direction_cdeg);
     _mav_put_uint16_t(buf, 22, ot_factor_dm);
-    _mav_put_uint8_t(buf, 24, mission_type);
-    _mav_put_uint8_t(buf, 25, location_method);
-    _mav_put_uint8_t(buf, 26, adjustment_type);
-    _mav_put_uint8_t(buf, 27, trajectory);
-    _mav_put_uint8_t(buf, 28, sheaf);
-    _mav_put_uint8_t(buf, 29, control_method);
-    _mav_put_uint8_t(buf, 30, danger_close);
-    _mav_put_uint8_t(buf, 31, tle_category);
-    _mav_put_uint8_t(buf, 32, mensurated);
-    _mav_put_uint8_t(buf, 33, effect_verb);
-    _mav_put_uint8_t_array(buf, 34, track_uid, 16);
+    _mav_put_uint8_t(buf, 24, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 25, target_component);
+    _mav_put_uint8_t(buf, 26, mission_type);
+    _mav_put_uint8_t(buf, 27, location_method);
+    _mav_put_uint8_t(buf, 28, adjustment_type);
+    _mav_put_uint8_t(buf, 29, trajectory);
+    _mav_put_uint8_t(buf, 30, sheaf);
+    _mav_put_uint8_t(buf, 31, control_method);
+    _mav_put_uint8_t(buf, 32, danger_close);
+    _mav_put_uint8_t(buf, 33, tle_category);
+    _mav_put_uint8_t(buf, 34, mensurated);
+    _mav_put_uint8_t(buf, 35, effect_verb);
+    _mav_put_uint8_t_array(buf, 36, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN);
 #else
     mavlink_call_for_fire_t packet;
@@ -331,6 +353,8 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_chan(uint32_t system_id, u
     packet.sheaf_attitude_cdeg = sheaf_attitude_cdeg;
     packet.ot_direction_cdeg = ot_direction_cdeg;
     packet.ot_factor_dm = ot_factor_dm;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.mission_type = mission_type;
     packet.location_method = location_method;
     packet.adjustment_type = adjustment_type;
@@ -346,7 +370,7 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_chan(uint32_t system_id, u
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_CALL_FOR_FIRE;
-    return mavlink_finalize_message_chan(msg, system_id, component_id, chan, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC);
+    return mavlink_finalize_message_chan_target(msg, system_id, component_id, chan, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC, target_system);
 }
 
 /**
@@ -359,7 +383,7 @@ static inline uint16_t mavlink_msg_call_for_fire_pack_chan(uint32_t system_id, u
  */
 static inline uint16_t mavlink_msg_call_for_fire_encode(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg, const mavlink_call_for_fire_t* call_for_fire)
 {
-    return mavlink_msg_call_for_fire_pack(system_id, component_id, msg, call_for_fire->time_usec, call_for_fire->sequence, call_for_fire->mission_type, call_for_fire->location_method, call_for_fire->adjustment_type, call_for_fire->trajectory, call_for_fire->sheaf, call_for_fire->control_method, call_for_fire->danger_close, call_for_fire->rounds, call_for_fire->duration_s, call_for_fire->tle_category, call_for_fire->mensurated, call_for_fire->sheaf_length_m, call_for_fire->sheaf_width_m, call_for_fire->sheaf_attitude_cdeg, call_for_fire->ot_direction_cdeg, call_for_fire->ot_factor_dm, call_for_fire->effect_verb, call_for_fire->track_uid);
+    return mavlink_msg_call_for_fire_pack(system_id, component_id, msg, call_for_fire->time_usec, call_for_fire->target_system, call_for_fire->target_component, call_for_fire->sequence, call_for_fire->mission_type, call_for_fire->location_method, call_for_fire->adjustment_type, call_for_fire->trajectory, call_for_fire->sheaf, call_for_fire->control_method, call_for_fire->danger_close, call_for_fire->rounds, call_for_fire->duration_s, call_for_fire->tle_category, call_for_fire->mensurated, call_for_fire->sheaf_length_m, call_for_fire->sheaf_width_m, call_for_fire->sheaf_attitude_cdeg, call_for_fire->ot_direction_cdeg, call_for_fire->ot_factor_dm, call_for_fire->effect_verb, call_for_fire->track_uid);
 }
 
 /**
@@ -373,7 +397,7 @@ static inline uint16_t mavlink_msg_call_for_fire_encode(uint32_t system_id, uint
  */
 static inline uint16_t mavlink_msg_call_for_fire_encode_chan(uint32_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, const mavlink_call_for_fire_t* call_for_fire)
 {
-    return mavlink_msg_call_for_fire_pack_chan(system_id, component_id, chan, msg, call_for_fire->time_usec, call_for_fire->sequence, call_for_fire->mission_type, call_for_fire->location_method, call_for_fire->adjustment_type, call_for_fire->trajectory, call_for_fire->sheaf, call_for_fire->control_method, call_for_fire->danger_close, call_for_fire->rounds, call_for_fire->duration_s, call_for_fire->tle_category, call_for_fire->mensurated, call_for_fire->sheaf_length_m, call_for_fire->sheaf_width_m, call_for_fire->sheaf_attitude_cdeg, call_for_fire->ot_direction_cdeg, call_for_fire->ot_factor_dm, call_for_fire->effect_verb, call_for_fire->track_uid);
+    return mavlink_msg_call_for_fire_pack_chan(system_id, component_id, chan, msg, call_for_fire->time_usec, call_for_fire->target_system, call_for_fire->target_component, call_for_fire->sequence, call_for_fire->mission_type, call_for_fire->location_method, call_for_fire->adjustment_type, call_for_fire->trajectory, call_for_fire->sheaf, call_for_fire->control_method, call_for_fire->danger_close, call_for_fire->rounds, call_for_fire->duration_s, call_for_fire->tle_category, call_for_fire->mensurated, call_for_fire->sheaf_length_m, call_for_fire->sheaf_width_m, call_for_fire->sheaf_attitude_cdeg, call_for_fire->ot_direction_cdeg, call_for_fire->ot_factor_dm, call_for_fire->effect_verb, call_for_fire->track_uid);
 }
 
 /**
@@ -387,7 +411,7 @@ static inline uint16_t mavlink_msg_call_for_fire_encode_chan(uint32_t system_id,
  */
 static inline uint16_t mavlink_msg_call_for_fire_encode_status(uint32_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_call_for_fire_t* call_for_fire)
 {
-    return mavlink_msg_call_for_fire_pack_status(system_id, component_id, _status, msg,  call_for_fire->time_usec, call_for_fire->sequence, call_for_fire->mission_type, call_for_fire->location_method, call_for_fire->adjustment_type, call_for_fire->trajectory, call_for_fire->sheaf, call_for_fire->control_method, call_for_fire->danger_close, call_for_fire->rounds, call_for_fire->duration_s, call_for_fire->tle_category, call_for_fire->mensurated, call_for_fire->sheaf_length_m, call_for_fire->sheaf_width_m, call_for_fire->sheaf_attitude_cdeg, call_for_fire->ot_direction_cdeg, call_for_fire->ot_factor_dm, call_for_fire->effect_verb, call_for_fire->track_uid);
+    return mavlink_msg_call_for_fire_pack_status(system_id, component_id, _status, msg,  call_for_fire->time_usec, call_for_fire->target_system, call_for_fire->target_component, call_for_fire->sequence, call_for_fire->mission_type, call_for_fire->location_method, call_for_fire->adjustment_type, call_for_fire->trajectory, call_for_fire->sheaf, call_for_fire->control_method, call_for_fire->danger_close, call_for_fire->rounds, call_for_fire->duration_s, call_for_fire->tle_category, call_for_fire->mensurated, call_for_fire->sheaf_length_m, call_for_fire->sheaf_width_m, call_for_fire->sheaf_attitude_cdeg, call_for_fire->ot_direction_cdeg, call_for_fire->ot_factor_dm, call_for_fire->effect_verb, call_for_fire->track_uid);
 }
 
 /**
@@ -395,6 +419,8 @@ static inline uint16_t mavlink_msg_call_for_fire_encode_status(uint32_t system_i
  * @param chan MAVLink channel to send the message
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the fire direction center. Never 0; receivers ignore a call for fire sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
  * @param sequence  Fire-mission sequence number this CFF applies to.
  * @param mission_type  Warning-order mission type.
  * @param location_method  Method of target location.
@@ -417,7 +443,7 @@ static inline uint16_t mavlink_msg_call_for_fire_encode_status(uint32_t system_i
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-static inline void mavlink_msg_call_for_fire_send(mavlink_channel_t chan, uint64_t time_usec, uint16_t sequence, uint8_t mission_type, uint8_t location_method, uint8_t adjustment_type, uint8_t trajectory, uint8_t sheaf, uint8_t control_method, uint8_t danger_close, uint16_t rounds, uint16_t duration_s, uint8_t tle_category, uint8_t mensurated, uint16_t sheaf_length_m, uint16_t sheaf_width_m, uint16_t sheaf_attitude_cdeg, uint16_t ot_direction_cdeg, uint16_t ot_factor_dm, uint8_t effect_verb, const uint8_t *track_uid)
+static inline void mavlink_msg_call_for_fire_send(mavlink_channel_t chan, uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint16_t sequence, uint8_t mission_type, uint8_t location_method, uint8_t adjustment_type, uint8_t trajectory, uint8_t sheaf, uint8_t control_method, uint8_t danger_close, uint16_t rounds, uint16_t duration_s, uint8_t tle_category, uint8_t mensurated, uint16_t sheaf_length_m, uint16_t sheaf_width_m, uint16_t sheaf_attitude_cdeg, uint16_t ot_direction_cdeg, uint16_t ot_factor_dm, uint8_t effect_verb, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN];
@@ -430,18 +456,20 @@ static inline void mavlink_msg_call_for_fire_send(mavlink_channel_t chan, uint64
     _mav_put_uint16_t(buf, 18, sheaf_attitude_cdeg);
     _mav_put_uint16_t(buf, 20, ot_direction_cdeg);
     _mav_put_uint16_t(buf, 22, ot_factor_dm);
-    _mav_put_uint8_t(buf, 24, mission_type);
-    _mav_put_uint8_t(buf, 25, location_method);
-    _mav_put_uint8_t(buf, 26, adjustment_type);
-    _mav_put_uint8_t(buf, 27, trajectory);
-    _mav_put_uint8_t(buf, 28, sheaf);
-    _mav_put_uint8_t(buf, 29, control_method);
-    _mav_put_uint8_t(buf, 30, danger_close);
-    _mav_put_uint8_t(buf, 31, tle_category);
-    _mav_put_uint8_t(buf, 32, mensurated);
-    _mav_put_uint8_t(buf, 33, effect_verb);
-    _mav_put_uint8_t_array(buf, 34, track_uid, 16);
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, buf, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC);
+    _mav_put_uint8_t(buf, 24, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 25, target_component);
+    _mav_put_uint8_t(buf, 26, mission_type);
+    _mav_put_uint8_t(buf, 27, location_method);
+    _mav_put_uint8_t(buf, 28, adjustment_type);
+    _mav_put_uint8_t(buf, 29, trajectory);
+    _mav_put_uint8_t(buf, 30, sheaf);
+    _mav_put_uint8_t(buf, 31, control_method);
+    _mav_put_uint8_t(buf, 32, danger_close);
+    _mav_put_uint8_t(buf, 33, tle_category);
+    _mav_put_uint8_t(buf, 34, mensurated);
+    _mav_put_uint8_t(buf, 35, effect_verb);
+    _mav_put_uint8_t_array(buf, 36, track_uid, 16);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, buf, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC, target_system);
 #else
     mavlink_call_for_fire_t packet;
     packet.time_usec = time_usec;
@@ -453,6 +481,8 @@ static inline void mavlink_msg_call_for_fire_send(mavlink_channel_t chan, uint64
     packet.sheaf_attitude_cdeg = sheaf_attitude_cdeg;
     packet.ot_direction_cdeg = ot_direction_cdeg;
     packet.ot_factor_dm = ot_factor_dm;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.mission_type = mission_type;
     packet.location_method = location_method;
     packet.adjustment_type = adjustment_type;
@@ -464,7 +494,7 @@ static inline void mavlink_msg_call_for_fire_send(mavlink_channel_t chan, uint64
     packet.mensurated = mensurated;
     packet.effect_verb = effect_verb;
     mav_array_memcpy(packet.track_uid, track_uid, sizeof(uint8_t)*16);
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, (const char *)&packet, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, (const char *)&packet, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC, target_system);
 #endif
 }
 
@@ -476,7 +506,7 @@ static inline void mavlink_msg_call_for_fire_send(mavlink_channel_t chan, uint64
 static inline void mavlink_msg_call_for_fire_send_struct(mavlink_channel_t chan, const mavlink_call_for_fire_t* call_for_fire)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
-    mavlink_msg_call_for_fire_send(chan, call_for_fire->time_usec, call_for_fire->sequence, call_for_fire->mission_type, call_for_fire->location_method, call_for_fire->adjustment_type, call_for_fire->trajectory, call_for_fire->sheaf, call_for_fire->control_method, call_for_fire->danger_close, call_for_fire->rounds, call_for_fire->duration_s, call_for_fire->tle_category, call_for_fire->mensurated, call_for_fire->sheaf_length_m, call_for_fire->sheaf_width_m, call_for_fire->sheaf_attitude_cdeg, call_for_fire->ot_direction_cdeg, call_for_fire->ot_factor_dm, call_for_fire->effect_verb, call_for_fire->track_uid);
+    mavlink_msg_call_for_fire_send(chan, call_for_fire->time_usec, call_for_fire->target_system, call_for_fire->target_component, call_for_fire->sequence, call_for_fire->mission_type, call_for_fire->location_method, call_for_fire->adjustment_type, call_for_fire->trajectory, call_for_fire->sheaf, call_for_fire->control_method, call_for_fire->danger_close, call_for_fire->rounds, call_for_fire->duration_s, call_for_fire->tle_category, call_for_fire->mensurated, call_for_fire->sheaf_length_m, call_for_fire->sheaf_width_m, call_for_fire->sheaf_attitude_cdeg, call_for_fire->ot_direction_cdeg, call_for_fire->ot_factor_dm, call_for_fire->effect_verb, call_for_fire->track_uid);
 #else
     _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, (const char *)call_for_fire, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC);
 #endif
@@ -490,7 +520,7 @@ static inline void mavlink_msg_call_for_fire_send_struct(mavlink_channel_t chan,
   is usually the receive buffer for the channel, and allows a reply to an
   incoming message with minimum stack space usage.
  */
-static inline void mavlink_msg_call_for_fire_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint64_t time_usec, uint16_t sequence, uint8_t mission_type, uint8_t location_method, uint8_t adjustment_type, uint8_t trajectory, uint8_t sheaf, uint8_t control_method, uint8_t danger_close, uint16_t rounds, uint16_t duration_s, uint8_t tle_category, uint8_t mensurated, uint16_t sheaf_length_m, uint16_t sheaf_width_m, uint16_t sheaf_attitude_cdeg, uint16_t ot_direction_cdeg, uint16_t ot_factor_dm, uint8_t effect_verb, const uint8_t *track_uid)
+static inline void mavlink_msg_call_for_fire_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint16_t sequence, uint8_t mission_type, uint8_t location_method, uint8_t adjustment_type, uint8_t trajectory, uint8_t sheaf, uint8_t control_method, uint8_t danger_close, uint16_t rounds, uint16_t duration_s, uint8_t tle_category, uint8_t mensurated, uint16_t sheaf_length_m, uint16_t sheaf_width_m, uint16_t sheaf_attitude_cdeg, uint16_t ot_direction_cdeg, uint16_t ot_factor_dm, uint8_t effect_verb, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char *buf = (char *)msgbuf;
@@ -503,18 +533,20 @@ static inline void mavlink_msg_call_for_fire_send_buf(mavlink_message_t *msgbuf,
     _mav_put_uint16_t(buf, 18, sheaf_attitude_cdeg);
     _mav_put_uint16_t(buf, 20, ot_direction_cdeg);
     _mav_put_uint16_t(buf, 22, ot_factor_dm);
-    _mav_put_uint8_t(buf, 24, mission_type);
-    _mav_put_uint8_t(buf, 25, location_method);
-    _mav_put_uint8_t(buf, 26, adjustment_type);
-    _mav_put_uint8_t(buf, 27, trajectory);
-    _mav_put_uint8_t(buf, 28, sheaf);
-    _mav_put_uint8_t(buf, 29, control_method);
-    _mav_put_uint8_t(buf, 30, danger_close);
-    _mav_put_uint8_t(buf, 31, tle_category);
-    _mav_put_uint8_t(buf, 32, mensurated);
-    _mav_put_uint8_t(buf, 33, effect_verb);
-    _mav_put_uint8_t_array(buf, 34, track_uid, 16);
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, buf, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC);
+    _mav_put_uint8_t(buf, 24, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 25, target_component);
+    _mav_put_uint8_t(buf, 26, mission_type);
+    _mav_put_uint8_t(buf, 27, location_method);
+    _mav_put_uint8_t(buf, 28, adjustment_type);
+    _mav_put_uint8_t(buf, 29, trajectory);
+    _mav_put_uint8_t(buf, 30, sheaf);
+    _mav_put_uint8_t(buf, 31, control_method);
+    _mav_put_uint8_t(buf, 32, danger_close);
+    _mav_put_uint8_t(buf, 33, tle_category);
+    _mav_put_uint8_t(buf, 34, mensurated);
+    _mav_put_uint8_t(buf, 35, effect_verb);
+    _mav_put_uint8_t_array(buf, 36, track_uid, 16);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, buf, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC, target_system);
 #else
     mavlink_call_for_fire_t *packet = (mavlink_call_for_fire_t *)msgbuf;
     packet->time_usec = time_usec;
@@ -526,6 +558,8 @@ static inline void mavlink_msg_call_for_fire_send_buf(mavlink_message_t *msgbuf,
     packet->sheaf_attitude_cdeg = sheaf_attitude_cdeg;
     packet->ot_direction_cdeg = ot_direction_cdeg;
     packet->ot_factor_dm = ot_factor_dm;
+    packet->target_system = mavlink_msg_target_field(target_system);
+    packet->target_component = target_component;
     packet->mission_type = mission_type;
     packet->location_method = location_method;
     packet->adjustment_type = adjustment_type;
@@ -537,7 +571,7 @@ static inline void mavlink_msg_call_for_fire_send_buf(mavlink_message_t *msgbuf,
     packet->mensurated = mensurated;
     packet->effect_verb = effect_verb;
     mav_array_memcpy(packet->track_uid, track_uid, sizeof(uint8_t)*16);
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, (const char *)packet, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_CALL_FOR_FIRE, (const char *)packet, MAVLINK_MSG_ID_CALL_FOR_FIRE_MIN_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN, MAVLINK_MSG_ID_CALL_FOR_FIRE_CRC, target_system);
 #endif
 }
 #endif
@@ -558,6 +592,16 @@ static inline uint64_t mavlink_msg_call_for_fire_get_time_usec(const mavlink_mes
 }
 
 /**
+ * @brief Get field target_component from call_for_fire message
+ *
+ * @return  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ */
+static inline uint8_t mavlink_msg_call_for_fire_get_target_component(const mavlink_message_t* msg)
+{
+    return _MAV_RETURN_uint8_t(msg,  25);
+}
+
+/**
  * @brief Get field sequence from call_for_fire message
  *
  * @return  Fire-mission sequence number this CFF applies to.
@@ -574,7 +618,7 @@ static inline uint16_t mavlink_msg_call_for_fire_get_sequence(const mavlink_mess
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_mission_type(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  24);
+    return _MAV_RETURN_uint8_t(msg,  26);
 }
 
 /**
@@ -584,7 +628,7 @@ static inline uint8_t mavlink_msg_call_for_fire_get_mission_type(const mavlink_m
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_location_method(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  25);
+    return _MAV_RETURN_uint8_t(msg,  27);
 }
 
 /**
@@ -594,7 +638,7 @@ static inline uint8_t mavlink_msg_call_for_fire_get_location_method(const mavlin
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_adjustment_type(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  26);
+    return _MAV_RETURN_uint8_t(msg,  28);
 }
 
 /**
@@ -604,7 +648,7 @@ static inline uint8_t mavlink_msg_call_for_fire_get_adjustment_type(const mavlin
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_trajectory(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  27);
+    return _MAV_RETURN_uint8_t(msg,  29);
 }
 
 /**
@@ -614,7 +658,7 @@ static inline uint8_t mavlink_msg_call_for_fire_get_trajectory(const mavlink_mes
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_sheaf(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  28);
+    return _MAV_RETURN_uint8_t(msg,  30);
 }
 
 /**
@@ -624,7 +668,7 @@ static inline uint8_t mavlink_msg_call_for_fire_get_sheaf(const mavlink_message_
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_control_method(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  29);
+    return _MAV_RETURN_uint8_t(msg,  31);
 }
 
 /**
@@ -634,7 +678,7 @@ static inline uint8_t mavlink_msg_call_for_fire_get_control_method(const mavlink
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_danger_close(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  30);
+    return _MAV_RETURN_uint8_t(msg,  32);
 }
 
 /**
@@ -664,7 +708,7 @@ static inline uint16_t mavlink_msg_call_for_fire_get_duration_s(const mavlink_me
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_tle_category(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  31);
+    return _MAV_RETURN_uint8_t(msg,  33);
 }
 
 /**
@@ -674,7 +718,7 @@ static inline uint8_t mavlink_msg_call_for_fire_get_tle_category(const mavlink_m
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_mensurated(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  32);
+    return _MAV_RETURN_uint8_t(msg,  34);
 }
 
 /**
@@ -734,7 +778,7 @@ static inline uint16_t mavlink_msg_call_for_fire_get_ot_factor_dm(const mavlink_
  */
 static inline uint8_t mavlink_msg_call_for_fire_get_effect_verb(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  33);
+    return _MAV_RETURN_uint8_t(msg,  35);
 }
 
 /**
@@ -744,7 +788,7 @@ static inline uint8_t mavlink_msg_call_for_fire_get_effect_verb(const mavlink_me
  */
 static inline uint16_t mavlink_msg_call_for_fire_get_track_uid(const mavlink_message_t* msg, uint8_t *track_uid)
 {
-    return _MAV_RETURN_uint8_t_array(msg, track_uid, 16,  34);
+    return _MAV_RETURN_uint8_t_array(msg, track_uid, 16,  36);
 }
 
 /**
@@ -765,6 +809,8 @@ static inline void mavlink_msg_call_for_fire_decode(const mavlink_message_t* msg
     call_for_fire->sheaf_attitude_cdeg = mavlink_msg_call_for_fire_get_sheaf_attitude_cdeg(msg);
     call_for_fire->ot_direction_cdeg = mavlink_msg_call_for_fire_get_ot_direction_cdeg(msg);
     call_for_fire->ot_factor_dm = mavlink_msg_call_for_fire_get_ot_factor_dm(msg);
+    call_for_fire->target_system = _MAV_RETURN_uint8_t(msg, 24);
+    call_for_fire->target_component = mavlink_msg_call_for_fire_get_target_component(msg);
     call_for_fire->mission_type = mavlink_msg_call_for_fire_get_mission_type(msg);
     call_for_fire->location_method = mavlink_msg_call_for_fire_get_location_method(msg);
     call_for_fire->adjustment_type = mavlink_msg_call_for_fire_get_adjustment_type(msg);
@@ -781,5 +827,11 @@ static inline void mavlink_msg_call_for_fire_decode(const mavlink_message_t* msg
         memset(call_for_fire, 0, MAVLINK_MSG_ID_CALL_FOR_FIRE_LEN);
     memcpy(call_for_fire, _MAV_PAYLOAD(msg), len);
 #endif
+    if (msg->incompat_flags & MAVLINK_IFLAG_TARGET32) {
+        // This uint8_t field cannot retain a wide target. The sentinel is NOT reserved.
+        // For routing use mavlink_msg_get_target_sysid(msg, mavlink_get_msg_entry(msg->msgid)).
+        // To relay after edits, pass that full target to _pack*(); _encode*() loses it.
+        call_for_fire->target_system = mavlink_msg_target_field(msg->target_sysid);
+    }
 
 }

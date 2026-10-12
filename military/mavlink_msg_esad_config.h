@@ -8,19 +8,21 @@
 
 typedef struct __mavlink_esad_config_t {
  uint64_t time_usec; /*< [us] Timestamp (UNIX epoch, microseconds UTC).*/
- uint32_t arming_challenge_hash; /*<  Challenge hash matching the active ESAD_STATE hash for the target store.*/
- uint8_t esad_id; /*<  Vehicle-local ESAD instance identifier to configure. 0 = all ESAD instances selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.*/
- uint8_t store_id; /*<  Target store instance identifier. 0 = all stores / broadcast.*/
+ uint32_t arming_challenge_hash; /*<  Challenge hash the selected ESAD advertises in ESAD_STATE. With esad_id = 0 or store_id = 0, every selected local ESAD must advertise this hash.*/
+ uint8_t target_system; /*<  System ID of the intended recipient. Never 0; receivers ignore an ESAD_CONFIG sent to every system.*/
+ uint8_t target_component; /*<  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.*/
+ uint8_t esad_id; /*<  Vehicle-local ESAD instance identifier to configure. 0 = every local ESAD selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.*/
+ uint8_t store_id; /*<  Target store instance identifier. 0 = every store on the receiving system.*/
  uint8_t trigger_distance_mode; /*<  Requested coarse trigger-distance standoff mode. Coarse selection only.*/
 } mavlink_esad_config_t;
 
-#define MAVLINK_MSG_ID_ESAD_CONFIG_LEN 15
-#define MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN 15
-#define MAVLINK_MSG_ID_53032_LEN 15
-#define MAVLINK_MSG_ID_53032_MIN_LEN 15
+#define MAVLINK_MSG_ID_ESAD_CONFIG_LEN 17
+#define MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN 17
+#define MAVLINK_MSG_ID_53032_LEN 17
+#define MAVLINK_MSG_ID_53032_MIN_LEN 17
 
-#define MAVLINK_MSG_ID_ESAD_CONFIG_CRC 216
-#define MAVLINK_MSG_ID_53032_CRC 216
+#define MAVLINK_MSG_ID_ESAD_CONFIG_CRC 163
+#define MAVLINK_MSG_ID_53032_CRC 163
 
 
 
@@ -28,23 +30,27 @@ typedef struct __mavlink_esad_config_t {
 #define MAVLINK_MESSAGE_INFO_ESAD_CONFIG { \
     53032, \
     "ESAD_CONFIG", \
-    5, \
+    7, \
     {  { "time_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_esad_config_t, time_usec) }, \
+         { "target_system", NULL, MAVLINK_TYPE_UINT8_T, 0, 12, offsetof(mavlink_esad_config_t, target_system) }, \
+         { "target_component", NULL, MAVLINK_TYPE_UINT8_T, 0, 13, offsetof(mavlink_esad_config_t, target_component) }, \
          { "arming_challenge_hash", NULL, MAVLINK_TYPE_UINT32_T, 0, 8, offsetof(mavlink_esad_config_t, arming_challenge_hash) }, \
-         { "esad_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 12, offsetof(mavlink_esad_config_t, esad_id) }, \
-         { "store_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 13, offsetof(mavlink_esad_config_t, store_id) }, \
-         { "trigger_distance_mode", NULL, MAVLINK_TYPE_UINT8_T, 0, 14, offsetof(mavlink_esad_config_t, trigger_distance_mode) }, \
+         { "esad_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 14, offsetof(mavlink_esad_config_t, esad_id) }, \
+         { "store_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 15, offsetof(mavlink_esad_config_t, store_id) }, \
+         { "trigger_distance_mode", NULL, MAVLINK_TYPE_UINT8_T, 0, 16, offsetof(mavlink_esad_config_t, trigger_distance_mode) }, \
          } \
 }
 #else
 #define MAVLINK_MESSAGE_INFO_ESAD_CONFIG { \
     "ESAD_CONFIG", \
-    5, \
+    7, \
     {  { "time_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_esad_config_t, time_usec) }, \
+         { "target_system", NULL, MAVLINK_TYPE_UINT8_T, 0, 12, offsetof(mavlink_esad_config_t, target_system) }, \
+         { "target_component", NULL, MAVLINK_TYPE_UINT8_T, 0, 13, offsetof(mavlink_esad_config_t, target_component) }, \
          { "arming_challenge_hash", NULL, MAVLINK_TYPE_UINT32_T, 0, 8, offsetof(mavlink_esad_config_t, arming_challenge_hash) }, \
-         { "esad_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 12, offsetof(mavlink_esad_config_t, esad_id) }, \
-         { "store_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 13, offsetof(mavlink_esad_config_t, store_id) }, \
-         { "trigger_distance_mode", NULL, MAVLINK_TYPE_UINT8_T, 0, 14, offsetof(mavlink_esad_config_t, trigger_distance_mode) }, \
+         { "esad_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 14, offsetof(mavlink_esad_config_t, esad_id) }, \
+         { "store_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 15, offsetof(mavlink_esad_config_t, store_id) }, \
+         { "trigger_distance_mode", NULL, MAVLINK_TYPE_UINT8_T, 0, 16, offsetof(mavlink_esad_config_t, trigger_distance_mode) }, \
          } \
 }
 #endif
@@ -56,28 +62,34 @@ typedef struct __mavlink_esad_config_t {
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
- * @param arming_challenge_hash  Challenge hash matching the active ESAD_STATE hash for the target store.
- * @param esad_id  Vehicle-local ESAD instance identifier to configure. 0 = all ESAD instances selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
- * @param store_id  Target store instance identifier. 0 = all stores / broadcast.
+ * @param target_system  System ID of the intended recipient. Never 0; receivers ignore an ESAD_CONFIG sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ * @param arming_challenge_hash  Challenge hash the selected ESAD advertises in ESAD_STATE. With esad_id = 0 or store_id = 0, every selected local ESAD must advertise this hash.
+ * @param esad_id  Vehicle-local ESAD instance identifier to configure. 0 = every local ESAD selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
+ * @param store_id  Target store instance identifier. 0 = every store on the receiving system.
  * @param trigger_distance_mode  Requested coarse trigger-distance standoff mode. Coarse selection only.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_esad_config_pack(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg,
-                               uint64_t time_usec, uint32_t arming_challenge_hash, uint8_t esad_id, uint8_t store_id, uint8_t trigger_distance_mode)
+                               uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint32_t arming_challenge_hash, uint8_t esad_id, uint8_t store_id, uint8_t trigger_distance_mode)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_ESAD_CONFIG_LEN];
     _mav_put_uint64_t(buf, 0, time_usec);
     _mav_put_uint32_t(buf, 8, arming_challenge_hash);
-    _mav_put_uint8_t(buf, 12, esad_id);
-    _mav_put_uint8_t(buf, 13, store_id);
-    _mav_put_uint8_t(buf, 14, trigger_distance_mode);
+    _mav_put_uint8_t(buf, 12, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 13, target_component);
+    _mav_put_uint8_t(buf, 14, esad_id);
+    _mav_put_uint8_t(buf, 15, store_id);
+    _mav_put_uint8_t(buf, 16, trigger_distance_mode);
 
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_ESAD_CONFIG_LEN);
 #else
     mavlink_esad_config_t packet;
     packet.time_usec = time_usec;
     packet.arming_challenge_hash = arming_challenge_hash;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.esad_id = esad_id;
     packet.store_id = store_id;
     packet.trigger_distance_mode = trigger_distance_mode;
@@ -86,7 +98,7 @@ static inline uint16_t mavlink_msg_esad_config_pack(uint32_t system_id, uint8_t 
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_ESAD_CONFIG;
-    return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC);
+    return mavlink_finalize_message_target(msg, system_id, component_id, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC, target_system);
 }
 
 /**
@@ -97,28 +109,34 @@ static inline uint16_t mavlink_msg_esad_config_pack(uint32_t system_id, uint8_t 
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
- * @param arming_challenge_hash  Challenge hash matching the active ESAD_STATE hash for the target store.
- * @param esad_id  Vehicle-local ESAD instance identifier to configure. 0 = all ESAD instances selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
- * @param store_id  Target store instance identifier. 0 = all stores / broadcast.
+ * @param target_system  System ID of the intended recipient. Never 0; receivers ignore an ESAD_CONFIG sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ * @param arming_challenge_hash  Challenge hash the selected ESAD advertises in ESAD_STATE. With esad_id = 0 or store_id = 0, every selected local ESAD must advertise this hash.
+ * @param esad_id  Vehicle-local ESAD instance identifier to configure. 0 = every local ESAD selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
+ * @param store_id  Target store instance identifier. 0 = every store on the receiving system.
  * @param trigger_distance_mode  Requested coarse trigger-distance standoff mode. Coarse selection only.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_esad_config_pack_status(uint32_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
-                               uint64_t time_usec, uint32_t arming_challenge_hash, uint8_t esad_id, uint8_t store_id, uint8_t trigger_distance_mode)
+                               uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint32_t arming_challenge_hash, uint8_t esad_id, uint8_t store_id, uint8_t trigger_distance_mode)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_ESAD_CONFIG_LEN];
     _mav_put_uint64_t(buf, 0, time_usec);
     _mav_put_uint32_t(buf, 8, arming_challenge_hash);
-    _mav_put_uint8_t(buf, 12, esad_id);
-    _mav_put_uint8_t(buf, 13, store_id);
-    _mav_put_uint8_t(buf, 14, trigger_distance_mode);
+    _mav_put_uint8_t(buf, 12, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 13, target_component);
+    _mav_put_uint8_t(buf, 14, esad_id);
+    _mav_put_uint8_t(buf, 15, store_id);
+    _mav_put_uint8_t(buf, 16, trigger_distance_mode);
 
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_ESAD_CONFIG_LEN);
 #else
     mavlink_esad_config_t packet;
     packet.time_usec = time_usec;
     packet.arming_challenge_hash = arming_challenge_hash;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.esad_id = esad_id;
     packet.store_id = store_id;
     packet.trigger_distance_mode = trigger_distance_mode;
@@ -128,9 +146,9 @@ static inline uint16_t mavlink_msg_esad_config_pack_status(uint32_t system_id, u
 
     msg->msgid = MAVLINK_MSG_ID_ESAD_CONFIG;
 #if MAVLINK_CRC_EXTRA
-    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC);
+    return mavlink_finalize_message_buffer_target(msg, system_id, component_id, _status, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC, target_system);
 #else
-    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, 0);
+    return mavlink_finalize_message_buffer_target(msg, system_id, component_id, _status, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, 0, target_system);
 #endif
 }
 
@@ -141,29 +159,35 @@ static inline uint16_t mavlink_msg_esad_config_pack_status(uint32_t system_id, u
  * @param chan The MAVLink channel this message will be sent over
  * @param msg The MAVLink message to compress the data into
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
- * @param arming_challenge_hash  Challenge hash matching the active ESAD_STATE hash for the target store.
- * @param esad_id  Vehicle-local ESAD instance identifier to configure. 0 = all ESAD instances selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
- * @param store_id  Target store instance identifier. 0 = all stores / broadcast.
+ * @param target_system  System ID of the intended recipient. Never 0; receivers ignore an ESAD_CONFIG sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ * @param arming_challenge_hash  Challenge hash the selected ESAD advertises in ESAD_STATE. With esad_id = 0 or store_id = 0, every selected local ESAD must advertise this hash.
+ * @param esad_id  Vehicle-local ESAD instance identifier to configure. 0 = every local ESAD selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
+ * @param store_id  Target store instance identifier. 0 = every store on the receiving system.
  * @param trigger_distance_mode  Requested coarse trigger-distance standoff mode. Coarse selection only.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_esad_config_pack_chan(uint32_t system_id, uint8_t component_id, uint8_t chan,
                                mavlink_message_t* msg,
-                                   uint64_t time_usec,uint32_t arming_challenge_hash,uint8_t esad_id,uint8_t store_id,uint8_t trigger_distance_mode)
+                                   uint64_t time_usec,uint32_t target_system,uint8_t target_component,uint32_t arming_challenge_hash,uint8_t esad_id,uint8_t store_id,uint8_t trigger_distance_mode)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_ESAD_CONFIG_LEN];
     _mav_put_uint64_t(buf, 0, time_usec);
     _mav_put_uint32_t(buf, 8, arming_challenge_hash);
-    _mav_put_uint8_t(buf, 12, esad_id);
-    _mav_put_uint8_t(buf, 13, store_id);
-    _mav_put_uint8_t(buf, 14, trigger_distance_mode);
+    _mav_put_uint8_t(buf, 12, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 13, target_component);
+    _mav_put_uint8_t(buf, 14, esad_id);
+    _mav_put_uint8_t(buf, 15, store_id);
+    _mav_put_uint8_t(buf, 16, trigger_distance_mode);
 
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_ESAD_CONFIG_LEN);
 #else
     mavlink_esad_config_t packet;
     packet.time_usec = time_usec;
     packet.arming_challenge_hash = arming_challenge_hash;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.esad_id = esad_id;
     packet.store_id = store_id;
     packet.trigger_distance_mode = trigger_distance_mode;
@@ -172,7 +196,7 @@ static inline uint16_t mavlink_msg_esad_config_pack_chan(uint32_t system_id, uin
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_ESAD_CONFIG;
-    return mavlink_finalize_message_chan(msg, system_id, component_id, chan, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC);
+    return mavlink_finalize_message_chan_target(msg, system_id, component_id, chan, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC, target_system);
 }
 
 /**
@@ -185,7 +209,7 @@ static inline uint16_t mavlink_msg_esad_config_pack_chan(uint32_t system_id, uin
  */
 static inline uint16_t mavlink_msg_esad_config_encode(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg, const mavlink_esad_config_t* esad_config)
 {
-    return mavlink_msg_esad_config_pack(system_id, component_id, msg, esad_config->time_usec, esad_config->arming_challenge_hash, esad_config->esad_id, esad_config->store_id, esad_config->trigger_distance_mode);
+    return mavlink_msg_esad_config_pack(system_id, component_id, msg, esad_config->time_usec, esad_config->target_system, esad_config->target_component, esad_config->arming_challenge_hash, esad_config->esad_id, esad_config->store_id, esad_config->trigger_distance_mode);
 }
 
 /**
@@ -199,7 +223,7 @@ static inline uint16_t mavlink_msg_esad_config_encode(uint32_t system_id, uint8_
  */
 static inline uint16_t mavlink_msg_esad_config_encode_chan(uint32_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, const mavlink_esad_config_t* esad_config)
 {
-    return mavlink_msg_esad_config_pack_chan(system_id, component_id, chan, msg, esad_config->time_usec, esad_config->arming_challenge_hash, esad_config->esad_id, esad_config->store_id, esad_config->trigger_distance_mode);
+    return mavlink_msg_esad_config_pack_chan(system_id, component_id, chan, msg, esad_config->time_usec, esad_config->target_system, esad_config->target_component, esad_config->arming_challenge_hash, esad_config->esad_id, esad_config->store_id, esad_config->trigger_distance_mode);
 }
 
 /**
@@ -213,7 +237,7 @@ static inline uint16_t mavlink_msg_esad_config_encode_chan(uint32_t system_id, u
  */
 static inline uint16_t mavlink_msg_esad_config_encode_status(uint32_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_esad_config_t* esad_config)
 {
-    return mavlink_msg_esad_config_pack_status(system_id, component_id, _status, msg,  esad_config->time_usec, esad_config->arming_challenge_hash, esad_config->esad_id, esad_config->store_id, esad_config->trigger_distance_mode);
+    return mavlink_msg_esad_config_pack_status(system_id, component_id, _status, msg,  esad_config->time_usec, esad_config->target_system, esad_config->target_component, esad_config->arming_challenge_hash, esad_config->esad_id, esad_config->store_id, esad_config->trigger_distance_mode);
 }
 
 /**
@@ -221,33 +245,39 @@ static inline uint16_t mavlink_msg_esad_config_encode_status(uint32_t system_id,
  * @param chan MAVLink channel to send the message
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
- * @param arming_challenge_hash  Challenge hash matching the active ESAD_STATE hash for the target store.
- * @param esad_id  Vehicle-local ESAD instance identifier to configure. 0 = all ESAD instances selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
- * @param store_id  Target store instance identifier. 0 = all stores / broadcast.
+ * @param target_system  System ID of the intended recipient. Never 0; receivers ignore an ESAD_CONFIG sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ * @param arming_challenge_hash  Challenge hash the selected ESAD advertises in ESAD_STATE. With esad_id = 0 or store_id = 0, every selected local ESAD must advertise this hash.
+ * @param esad_id  Vehicle-local ESAD instance identifier to configure. 0 = every local ESAD selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
+ * @param store_id  Target store instance identifier. 0 = every store on the receiving system.
  * @param trigger_distance_mode  Requested coarse trigger-distance standoff mode. Coarse selection only.
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-static inline void mavlink_msg_esad_config_send(mavlink_channel_t chan, uint64_t time_usec, uint32_t arming_challenge_hash, uint8_t esad_id, uint8_t store_id, uint8_t trigger_distance_mode)
+static inline void mavlink_msg_esad_config_send(mavlink_channel_t chan, uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint32_t arming_challenge_hash, uint8_t esad_id, uint8_t store_id, uint8_t trigger_distance_mode)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_ESAD_CONFIG_LEN];
     _mav_put_uint64_t(buf, 0, time_usec);
     _mav_put_uint32_t(buf, 8, arming_challenge_hash);
-    _mav_put_uint8_t(buf, 12, esad_id);
-    _mav_put_uint8_t(buf, 13, store_id);
-    _mav_put_uint8_t(buf, 14, trigger_distance_mode);
+    _mav_put_uint8_t(buf, 12, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 13, target_component);
+    _mav_put_uint8_t(buf, 14, esad_id);
+    _mav_put_uint8_t(buf, 15, store_id);
+    _mav_put_uint8_t(buf, 16, trigger_distance_mode);
 
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_ESAD_CONFIG, buf, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_ESAD_CONFIG, buf, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC, target_system);
 #else
     mavlink_esad_config_t packet;
     packet.time_usec = time_usec;
     packet.arming_challenge_hash = arming_challenge_hash;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.esad_id = esad_id;
     packet.store_id = store_id;
     packet.trigger_distance_mode = trigger_distance_mode;
 
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_ESAD_CONFIG, (const char *)&packet, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_ESAD_CONFIG, (const char *)&packet, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC, target_system);
 #endif
 }
 
@@ -259,7 +289,7 @@ static inline void mavlink_msg_esad_config_send(mavlink_channel_t chan, uint64_t
 static inline void mavlink_msg_esad_config_send_struct(mavlink_channel_t chan, const mavlink_esad_config_t* esad_config)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
-    mavlink_msg_esad_config_send(chan, esad_config->time_usec, esad_config->arming_challenge_hash, esad_config->esad_id, esad_config->store_id, esad_config->trigger_distance_mode);
+    mavlink_msg_esad_config_send(chan, esad_config->time_usec, esad_config->target_system, esad_config->target_component, esad_config->arming_challenge_hash, esad_config->esad_id, esad_config->store_id, esad_config->trigger_distance_mode);
 #else
     _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_ESAD_CONFIG, (const char *)esad_config, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC);
 #endif
@@ -273,26 +303,30 @@ static inline void mavlink_msg_esad_config_send_struct(mavlink_channel_t chan, c
   is usually the receive buffer for the channel, and allows a reply to an
   incoming message with minimum stack space usage.
  */
-static inline void mavlink_msg_esad_config_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint64_t time_usec, uint32_t arming_challenge_hash, uint8_t esad_id, uint8_t store_id, uint8_t trigger_distance_mode)
+static inline void mavlink_msg_esad_config_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint32_t arming_challenge_hash, uint8_t esad_id, uint8_t store_id, uint8_t trigger_distance_mode)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char *buf = (char *)msgbuf;
     _mav_put_uint64_t(buf, 0, time_usec);
     _mav_put_uint32_t(buf, 8, arming_challenge_hash);
-    _mav_put_uint8_t(buf, 12, esad_id);
-    _mav_put_uint8_t(buf, 13, store_id);
-    _mav_put_uint8_t(buf, 14, trigger_distance_mode);
+    _mav_put_uint8_t(buf, 12, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 13, target_component);
+    _mav_put_uint8_t(buf, 14, esad_id);
+    _mav_put_uint8_t(buf, 15, store_id);
+    _mav_put_uint8_t(buf, 16, trigger_distance_mode);
 
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_ESAD_CONFIG, buf, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_ESAD_CONFIG, buf, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC, target_system);
 #else
     mavlink_esad_config_t *packet = (mavlink_esad_config_t *)msgbuf;
     packet->time_usec = time_usec;
     packet->arming_challenge_hash = arming_challenge_hash;
+    packet->target_system = mavlink_msg_target_field(target_system);
+    packet->target_component = target_component;
     packet->esad_id = esad_id;
     packet->store_id = store_id;
     packet->trigger_distance_mode = trigger_distance_mode;
 
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_ESAD_CONFIG, (const char *)packet, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_ESAD_CONFIG, (const char *)packet, MAVLINK_MSG_ID_ESAD_CONFIG_MIN_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_LEN, MAVLINK_MSG_ID_ESAD_CONFIG_CRC, target_system);
 #endif
 }
 #endif
@@ -313,9 +347,19 @@ static inline uint64_t mavlink_msg_esad_config_get_time_usec(const mavlink_messa
 }
 
 /**
+ * @brief Get field target_component from esad_config message
+ *
+ * @return  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ */
+static inline uint8_t mavlink_msg_esad_config_get_target_component(const mavlink_message_t* msg)
+{
+    return _MAV_RETURN_uint8_t(msg,  13);
+}
+
+/**
  * @brief Get field arming_challenge_hash from esad_config message
  *
- * @return  Challenge hash matching the active ESAD_STATE hash for the target store.
+ * @return  Challenge hash the selected ESAD advertises in ESAD_STATE. With esad_id = 0 or store_id = 0, every selected local ESAD must advertise this hash.
  */
 static inline uint32_t mavlink_msg_esad_config_get_arming_challenge_hash(const mavlink_message_t* msg)
 {
@@ -325,21 +369,21 @@ static inline uint32_t mavlink_msg_esad_config_get_arming_challenge_hash(const m
 /**
  * @brief Get field esad_id from esad_config message
  *
- * @return  Vehicle-local ESAD instance identifier to configure. 0 = all ESAD instances selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
+ * @return  Vehicle-local ESAD instance identifier to configure. 0 = every local ESAD selected by store_id, 1-254 = specific ESAD instance, 255 = reserved.
  */
 static inline uint8_t mavlink_msg_esad_config_get_esad_id(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  12);
+    return _MAV_RETURN_uint8_t(msg,  14);
 }
 
 /**
  * @brief Get field store_id from esad_config message
  *
- * @return  Target store instance identifier. 0 = all stores / broadcast.
+ * @return  Target store instance identifier. 0 = every store on the receiving system.
  */
 static inline uint8_t mavlink_msg_esad_config_get_store_id(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  13);
+    return _MAV_RETURN_uint8_t(msg,  15);
 }
 
 /**
@@ -349,7 +393,7 @@ static inline uint8_t mavlink_msg_esad_config_get_store_id(const mavlink_message
  */
 static inline uint8_t mavlink_msg_esad_config_get_trigger_distance_mode(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  14);
+    return _MAV_RETURN_uint8_t(msg,  16);
 }
 
 /**
@@ -363,6 +407,8 @@ static inline void mavlink_msg_esad_config_decode(const mavlink_message_t* msg, 
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     esad_config->time_usec = mavlink_msg_esad_config_get_time_usec(msg);
     esad_config->arming_challenge_hash = mavlink_msg_esad_config_get_arming_challenge_hash(msg);
+    esad_config->target_system = _MAV_RETURN_uint8_t(msg, 12);
+    esad_config->target_component = mavlink_msg_esad_config_get_target_component(msg);
     esad_config->esad_id = mavlink_msg_esad_config_get_esad_id(msg);
     esad_config->store_id = mavlink_msg_esad_config_get_store_id(msg);
     esad_config->trigger_distance_mode = mavlink_msg_esad_config_get_trigger_distance_mode(msg);
@@ -371,5 +417,11 @@ static inline void mavlink_msg_esad_config_decode(const mavlink_message_t* msg, 
         memset(esad_config, 0, MAVLINK_MSG_ID_ESAD_CONFIG_LEN);
     memcpy(esad_config, _MAV_PAYLOAD(msg), len);
 #endif
+    if (msg->incompat_flags & MAVLINK_IFLAG_TARGET32) {
+        // This uint8_t field cannot retain a wide target. The sentinel is NOT reserved.
+        // For routing use mavlink_msg_get_target_sysid(msg, mavlink_get_msg_entry(msg->msgid)).
+        // To relay after edits, pass that full target to _pack*(); _encode*() loses it.
+        esad_config->target_system = mavlink_msg_target_field(msg->target_sysid);
+    }
 
 }

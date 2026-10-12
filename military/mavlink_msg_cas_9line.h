@@ -16,71 +16,83 @@ typedef struct __mavlink_cas_9line_t {
  int32_t tgt_lon; /*< [degE7] Line 6: target longitude, WGS84.*/
  int32_t friendlies_lat; /*< [degE7] Line 8: friendlies latitude, WGS84.*/
  int32_t friendlies_lon; /*< [degE7] Line 8: friendlies longitude, WGS84.*/
+ uint16_t sequence; /*<  Engagement sequence of this brief, chosen by its sender. TERMINAL_CONTROL.sequence refers to it. 0xFFFF is reserved: in a stop it means every brief.*/
  uint16_t heading_deg; /*< [deg] Line 2: heading (IP to target).*/
  int16_t offset_deg; /*< [deg] Line 2: offset (L/R); sign indicates side.*/
  uint16_t egress_deg; /*< [deg] Line 9: egress heading.*/
  uint16_t final_attack_heading_deg; /*< [deg] Remarks: final attack heading (FAH). 0xFFFF if unspecified.*/
+ uint8_t target_system; /*<  System ID of the intended recipient: the attacking aircraft. A flight gets the brief addressed to each of its aircraft. Never 0; receivers ignore a 9-line sent to every system.*/
+ uint8_t target_component; /*<  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.*/
  uint8_t mark_type; /*<  Line 7: type of mark / terminal guidance.*/
  uint8_t laser_code_slot; /*<  Line 7: 1 = a laser code is assigned (slot); 0 = none. Never the numeric code.*/
  uint8_t danger_close; /*<  Remarks: 1 = danger close / troops in contact; 0 = not.*/
  uint8_t delivery; /*<  Bomb-on-coordinate vs bomb-on-target.*/
+ uint8_t track_uid[16]; /*<  Track UID (see TRACK_IDENTITY) of the target this brief describes. All-zero if not associated with a track.*/
 } mavlink_cas_9line_t;
 
-#define MAVLINK_MSG_ID_CAS_9LINE_LEN 52
-#define MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN 52
-#define MAVLINK_MSG_ID_53060_LEN 52
-#define MAVLINK_MSG_ID_53060_MIN_LEN 52
+#define MAVLINK_MSG_ID_CAS_9LINE_LEN 72
+#define MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN 72
+#define MAVLINK_MSG_ID_53060_LEN 72
+#define MAVLINK_MSG_ID_53060_MIN_LEN 72
 
-#define MAVLINK_MSG_ID_CAS_9LINE_CRC 199
-#define MAVLINK_MSG_ID_53060_CRC 199
+#define MAVLINK_MSG_ID_CAS_9LINE_CRC 151
+#define MAVLINK_MSG_ID_53060_CRC 151
 
-
+#define MAVLINK_MSG_CAS_9LINE_FIELD_TRACK_UID_LEN 16
 
 #if MAVLINK_COMMAND_24BIT
 #define MAVLINK_MESSAGE_INFO_CAS_9LINE { \
     53060, \
     "CAS_9LINE", \
-    17, \
+    21, \
     {  { "time_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_cas_9line_t, time_usec) }, \
+         { "target_system", NULL, MAVLINK_TYPE_UINT8_T, 0, 50, offsetof(mavlink_cas_9line_t, target_system) }, \
+         { "target_component", NULL, MAVLINK_TYPE_UINT8_T, 0, 51, offsetof(mavlink_cas_9line_t, target_component) }, \
+         { "sequence", NULL, MAVLINK_TYPE_UINT16_T, 0, 40, offsetof(mavlink_cas_9line_t, sequence) }, \
          { "ip_lat", NULL, MAVLINK_TYPE_INT32_T, 0, 8, offsetof(mavlink_cas_9line_t, ip_lat) }, \
          { "ip_lon", NULL, MAVLINK_TYPE_INT32_T, 0, 12, offsetof(mavlink_cas_9line_t, ip_lon) }, \
-         { "heading_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 40, offsetof(mavlink_cas_9line_t, heading_deg) }, \
-         { "offset_deg", NULL, MAVLINK_TYPE_INT16_T, 0, 42, offsetof(mavlink_cas_9line_t, offset_deg) }, \
+         { "heading_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 42, offsetof(mavlink_cas_9line_t, heading_deg) }, \
+         { "offset_deg", NULL, MAVLINK_TYPE_INT16_T, 0, 44, offsetof(mavlink_cas_9line_t, offset_deg) }, \
          { "distance_m", NULL, MAVLINK_TYPE_UINT32_T, 0, 16, offsetof(mavlink_cas_9line_t, distance_m) }, \
          { "tgt_elev_m", NULL, MAVLINK_TYPE_INT32_T, 0, 20, offsetof(mavlink_cas_9line_t, tgt_elev_m) }, \
          { "tgt_lat", NULL, MAVLINK_TYPE_INT32_T, 0, 24, offsetof(mavlink_cas_9line_t, tgt_lat) }, \
          { "tgt_lon", NULL, MAVLINK_TYPE_INT32_T, 0, 28, offsetof(mavlink_cas_9line_t, tgt_lon) }, \
-         { "mark_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 48, offsetof(mavlink_cas_9line_t, mark_type) }, \
-         { "laser_code_slot", NULL, MAVLINK_TYPE_UINT8_T, 0, 49, offsetof(mavlink_cas_9line_t, laser_code_slot) }, \
+         { "mark_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 52, offsetof(mavlink_cas_9line_t, mark_type) }, \
+         { "laser_code_slot", NULL, MAVLINK_TYPE_UINT8_T, 0, 53, offsetof(mavlink_cas_9line_t, laser_code_slot) }, \
          { "friendlies_lat", NULL, MAVLINK_TYPE_INT32_T, 0, 32, offsetof(mavlink_cas_9line_t, friendlies_lat) }, \
          { "friendlies_lon", NULL, MAVLINK_TYPE_INT32_T, 0, 36, offsetof(mavlink_cas_9line_t, friendlies_lon) }, \
-         { "egress_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 44, offsetof(mavlink_cas_9line_t, egress_deg) }, \
-         { "final_attack_heading_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 46, offsetof(mavlink_cas_9line_t, final_attack_heading_deg) }, \
-         { "danger_close", NULL, MAVLINK_TYPE_UINT8_T, 0, 50, offsetof(mavlink_cas_9line_t, danger_close) }, \
-         { "delivery", NULL, MAVLINK_TYPE_UINT8_T, 0, 51, offsetof(mavlink_cas_9line_t, delivery) }, \
+         { "egress_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 46, offsetof(mavlink_cas_9line_t, egress_deg) }, \
+         { "final_attack_heading_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 48, offsetof(mavlink_cas_9line_t, final_attack_heading_deg) }, \
+         { "danger_close", NULL, MAVLINK_TYPE_UINT8_T, 0, 54, offsetof(mavlink_cas_9line_t, danger_close) }, \
+         { "delivery", NULL, MAVLINK_TYPE_UINT8_T, 0, 55, offsetof(mavlink_cas_9line_t, delivery) }, \
+         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 56, offsetof(mavlink_cas_9line_t, track_uid) }, \
          } \
 }
 #else
 #define MAVLINK_MESSAGE_INFO_CAS_9LINE { \
     "CAS_9LINE", \
-    17, \
+    21, \
     {  { "time_usec", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_cas_9line_t, time_usec) }, \
+         { "target_system", NULL, MAVLINK_TYPE_UINT8_T, 0, 50, offsetof(mavlink_cas_9line_t, target_system) }, \
+         { "target_component", NULL, MAVLINK_TYPE_UINT8_T, 0, 51, offsetof(mavlink_cas_9line_t, target_component) }, \
+         { "sequence", NULL, MAVLINK_TYPE_UINT16_T, 0, 40, offsetof(mavlink_cas_9line_t, sequence) }, \
          { "ip_lat", NULL, MAVLINK_TYPE_INT32_T, 0, 8, offsetof(mavlink_cas_9line_t, ip_lat) }, \
          { "ip_lon", NULL, MAVLINK_TYPE_INT32_T, 0, 12, offsetof(mavlink_cas_9line_t, ip_lon) }, \
-         { "heading_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 40, offsetof(mavlink_cas_9line_t, heading_deg) }, \
-         { "offset_deg", NULL, MAVLINK_TYPE_INT16_T, 0, 42, offsetof(mavlink_cas_9line_t, offset_deg) }, \
+         { "heading_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 42, offsetof(mavlink_cas_9line_t, heading_deg) }, \
+         { "offset_deg", NULL, MAVLINK_TYPE_INT16_T, 0, 44, offsetof(mavlink_cas_9line_t, offset_deg) }, \
          { "distance_m", NULL, MAVLINK_TYPE_UINT32_T, 0, 16, offsetof(mavlink_cas_9line_t, distance_m) }, \
          { "tgt_elev_m", NULL, MAVLINK_TYPE_INT32_T, 0, 20, offsetof(mavlink_cas_9line_t, tgt_elev_m) }, \
          { "tgt_lat", NULL, MAVLINK_TYPE_INT32_T, 0, 24, offsetof(mavlink_cas_9line_t, tgt_lat) }, \
          { "tgt_lon", NULL, MAVLINK_TYPE_INT32_T, 0, 28, offsetof(mavlink_cas_9line_t, tgt_lon) }, \
-         { "mark_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 48, offsetof(mavlink_cas_9line_t, mark_type) }, \
-         { "laser_code_slot", NULL, MAVLINK_TYPE_UINT8_T, 0, 49, offsetof(mavlink_cas_9line_t, laser_code_slot) }, \
+         { "mark_type", NULL, MAVLINK_TYPE_UINT8_T, 0, 52, offsetof(mavlink_cas_9line_t, mark_type) }, \
+         { "laser_code_slot", NULL, MAVLINK_TYPE_UINT8_T, 0, 53, offsetof(mavlink_cas_9line_t, laser_code_slot) }, \
          { "friendlies_lat", NULL, MAVLINK_TYPE_INT32_T, 0, 32, offsetof(mavlink_cas_9line_t, friendlies_lat) }, \
          { "friendlies_lon", NULL, MAVLINK_TYPE_INT32_T, 0, 36, offsetof(mavlink_cas_9line_t, friendlies_lon) }, \
-         { "egress_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 44, offsetof(mavlink_cas_9line_t, egress_deg) }, \
-         { "final_attack_heading_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 46, offsetof(mavlink_cas_9line_t, final_attack_heading_deg) }, \
-         { "danger_close", NULL, MAVLINK_TYPE_UINT8_T, 0, 50, offsetof(mavlink_cas_9line_t, danger_close) }, \
-         { "delivery", NULL, MAVLINK_TYPE_UINT8_T, 0, 51, offsetof(mavlink_cas_9line_t, delivery) }, \
+         { "egress_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 46, offsetof(mavlink_cas_9line_t, egress_deg) }, \
+         { "final_attack_heading_deg", NULL, MAVLINK_TYPE_UINT16_T, 0, 48, offsetof(mavlink_cas_9line_t, final_attack_heading_deg) }, \
+         { "danger_close", NULL, MAVLINK_TYPE_UINT8_T, 0, 54, offsetof(mavlink_cas_9line_t, danger_close) }, \
+         { "delivery", NULL, MAVLINK_TYPE_UINT8_T, 0, 55, offsetof(mavlink_cas_9line_t, delivery) }, \
+         { "track_uid", NULL, MAVLINK_TYPE_UINT8_T, 16, 56, offsetof(mavlink_cas_9line_t, track_uid) }, \
          } \
 }
 #endif
@@ -92,6 +104,9 @@ typedef struct __mavlink_cas_9line_t {
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the attacking aircraft. A flight gets the brief addressed to each of its aircraft. Never 0; receivers ignore a 9-line sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ * @param sequence  Engagement sequence of this brief, chosen by its sender. TERMINAL_CONTROL.sequence refers to it. 0xFFFF is reserved: in a stop it means every brief.
  * @param ip_lat [degE7] Line 1: initial point / battle position latitude, WGS84.
  * @param ip_lon [degE7] Line 1: initial point / battle position longitude, WGS84.
  * @param heading_deg [deg] Line 2: heading (IP to target).
@@ -108,10 +123,11 @@ typedef struct __mavlink_cas_9line_t {
  * @param final_attack_heading_deg [deg] Remarks: final attack heading (FAH). 0xFFFF if unspecified.
  * @param danger_close  Remarks: 1 = danger close / troops in contact; 0 = not.
  * @param delivery  Bomb-on-coordinate vs bomb-on-target.
+ * @param track_uid  Track UID (see TRACK_IDENTITY) of the target this brief describes. All-zero if not associated with a track.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_cas_9line_pack(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg,
-                               uint64_t time_usec, int32_t ip_lat, int32_t ip_lon, uint16_t heading_deg, int16_t offset_deg, uint32_t distance_m, int32_t tgt_elev_m, int32_t tgt_lat, int32_t tgt_lon, uint8_t mark_type, uint8_t laser_code_slot, int32_t friendlies_lat, int32_t friendlies_lon, uint16_t egress_deg, uint16_t final_attack_heading_deg, uint8_t danger_close, uint8_t delivery)
+                               uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint16_t sequence, int32_t ip_lat, int32_t ip_lon, uint16_t heading_deg, int16_t offset_deg, uint32_t distance_m, int32_t tgt_elev_m, int32_t tgt_lat, int32_t tgt_lon, uint8_t mark_type, uint8_t laser_code_slot, int32_t friendlies_lat, int32_t friendlies_lon, uint16_t egress_deg, uint16_t final_attack_heading_deg, uint8_t danger_close, uint8_t delivery, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_CAS_9LINE_LEN];
@@ -124,15 +140,18 @@ static inline uint16_t mavlink_msg_cas_9line_pack(uint32_t system_id, uint8_t co
     _mav_put_int32_t(buf, 28, tgt_lon);
     _mav_put_int32_t(buf, 32, friendlies_lat);
     _mav_put_int32_t(buf, 36, friendlies_lon);
-    _mav_put_uint16_t(buf, 40, heading_deg);
-    _mav_put_int16_t(buf, 42, offset_deg);
-    _mav_put_uint16_t(buf, 44, egress_deg);
-    _mav_put_uint16_t(buf, 46, final_attack_heading_deg);
-    _mav_put_uint8_t(buf, 48, mark_type);
-    _mav_put_uint8_t(buf, 49, laser_code_slot);
-    _mav_put_uint8_t(buf, 50, danger_close);
-    _mav_put_uint8_t(buf, 51, delivery);
-
+    _mav_put_uint16_t(buf, 40, sequence);
+    _mav_put_uint16_t(buf, 42, heading_deg);
+    _mav_put_int16_t(buf, 44, offset_deg);
+    _mav_put_uint16_t(buf, 46, egress_deg);
+    _mav_put_uint16_t(buf, 48, final_attack_heading_deg);
+    _mav_put_uint8_t(buf, 50, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 51, target_component);
+    _mav_put_uint8_t(buf, 52, mark_type);
+    _mav_put_uint8_t(buf, 53, laser_code_slot);
+    _mav_put_uint8_t(buf, 54, danger_close);
+    _mav_put_uint8_t(buf, 55, delivery);
+    _mav_put_uint8_t_array(buf, 56, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_CAS_9LINE_LEN);
 #else
     mavlink_cas_9line_t packet;
@@ -145,20 +164,23 @@ static inline uint16_t mavlink_msg_cas_9line_pack(uint32_t system_id, uint8_t co
     packet.tgt_lon = tgt_lon;
     packet.friendlies_lat = friendlies_lat;
     packet.friendlies_lon = friendlies_lon;
+    packet.sequence = sequence;
     packet.heading_deg = heading_deg;
     packet.offset_deg = offset_deg;
     packet.egress_deg = egress_deg;
     packet.final_attack_heading_deg = final_attack_heading_deg;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.mark_type = mark_type;
     packet.laser_code_slot = laser_code_slot;
     packet.danger_close = danger_close;
     packet.delivery = delivery;
-
+    mav_array_memcpy(packet.track_uid, track_uid, sizeof(uint8_t)*16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, MAVLINK_MSG_ID_CAS_9LINE_LEN);
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_CAS_9LINE;
-    return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC);
+    return mavlink_finalize_message_target(msg, system_id, component_id, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC, target_system);
 }
 
 /**
@@ -169,6 +191,9 @@ static inline uint16_t mavlink_msg_cas_9line_pack(uint32_t system_id, uint8_t co
  * @param msg The MAVLink message to compress the data into
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the attacking aircraft. A flight gets the brief addressed to each of its aircraft. Never 0; receivers ignore a 9-line sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ * @param sequence  Engagement sequence of this brief, chosen by its sender. TERMINAL_CONTROL.sequence refers to it. 0xFFFF is reserved: in a stop it means every brief.
  * @param ip_lat [degE7] Line 1: initial point / battle position latitude, WGS84.
  * @param ip_lon [degE7] Line 1: initial point / battle position longitude, WGS84.
  * @param heading_deg [deg] Line 2: heading (IP to target).
@@ -185,10 +210,11 @@ static inline uint16_t mavlink_msg_cas_9line_pack(uint32_t system_id, uint8_t co
  * @param final_attack_heading_deg [deg] Remarks: final attack heading (FAH). 0xFFFF if unspecified.
  * @param danger_close  Remarks: 1 = danger close / troops in contact; 0 = not.
  * @param delivery  Bomb-on-coordinate vs bomb-on-target.
+ * @param track_uid  Track UID (see TRACK_IDENTITY) of the target this brief describes. All-zero if not associated with a track.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_cas_9line_pack_status(uint32_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
-                               uint64_t time_usec, int32_t ip_lat, int32_t ip_lon, uint16_t heading_deg, int16_t offset_deg, uint32_t distance_m, int32_t tgt_elev_m, int32_t tgt_lat, int32_t tgt_lon, uint8_t mark_type, uint8_t laser_code_slot, int32_t friendlies_lat, int32_t friendlies_lon, uint16_t egress_deg, uint16_t final_attack_heading_deg, uint8_t danger_close, uint8_t delivery)
+                               uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint16_t sequence, int32_t ip_lat, int32_t ip_lon, uint16_t heading_deg, int16_t offset_deg, uint32_t distance_m, int32_t tgt_elev_m, int32_t tgt_lat, int32_t tgt_lon, uint8_t mark_type, uint8_t laser_code_slot, int32_t friendlies_lat, int32_t friendlies_lon, uint16_t egress_deg, uint16_t final_attack_heading_deg, uint8_t danger_close, uint8_t delivery, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_CAS_9LINE_LEN];
@@ -201,15 +227,18 @@ static inline uint16_t mavlink_msg_cas_9line_pack_status(uint32_t system_id, uin
     _mav_put_int32_t(buf, 28, tgt_lon);
     _mav_put_int32_t(buf, 32, friendlies_lat);
     _mav_put_int32_t(buf, 36, friendlies_lon);
-    _mav_put_uint16_t(buf, 40, heading_deg);
-    _mav_put_int16_t(buf, 42, offset_deg);
-    _mav_put_uint16_t(buf, 44, egress_deg);
-    _mav_put_uint16_t(buf, 46, final_attack_heading_deg);
-    _mav_put_uint8_t(buf, 48, mark_type);
-    _mav_put_uint8_t(buf, 49, laser_code_slot);
-    _mav_put_uint8_t(buf, 50, danger_close);
-    _mav_put_uint8_t(buf, 51, delivery);
-
+    _mav_put_uint16_t(buf, 40, sequence);
+    _mav_put_uint16_t(buf, 42, heading_deg);
+    _mav_put_int16_t(buf, 44, offset_deg);
+    _mav_put_uint16_t(buf, 46, egress_deg);
+    _mav_put_uint16_t(buf, 48, final_attack_heading_deg);
+    _mav_put_uint8_t(buf, 50, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 51, target_component);
+    _mav_put_uint8_t(buf, 52, mark_type);
+    _mav_put_uint8_t(buf, 53, laser_code_slot);
+    _mav_put_uint8_t(buf, 54, danger_close);
+    _mav_put_uint8_t(buf, 55, delivery);
+    _mav_put_uint8_t_array(buf, 56, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_CAS_9LINE_LEN);
 #else
     mavlink_cas_9line_t packet;
@@ -222,23 +251,26 @@ static inline uint16_t mavlink_msg_cas_9line_pack_status(uint32_t system_id, uin
     packet.tgt_lon = tgt_lon;
     packet.friendlies_lat = friendlies_lat;
     packet.friendlies_lon = friendlies_lon;
+    packet.sequence = sequence;
     packet.heading_deg = heading_deg;
     packet.offset_deg = offset_deg;
     packet.egress_deg = egress_deg;
     packet.final_attack_heading_deg = final_attack_heading_deg;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.mark_type = mark_type;
     packet.laser_code_slot = laser_code_slot;
     packet.danger_close = danger_close;
     packet.delivery = delivery;
-
+    mav_array_memcpy(packet.track_uid, track_uid, sizeof(uint8_t)*16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, MAVLINK_MSG_ID_CAS_9LINE_LEN);
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_CAS_9LINE;
 #if MAVLINK_CRC_EXTRA
-    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC);
+    return mavlink_finalize_message_buffer_target(msg, system_id, component_id, _status, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC, target_system);
 #else
-    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, 0);
+    return mavlink_finalize_message_buffer_target(msg, system_id, component_id, _status, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, 0, target_system);
 #endif
 }
 
@@ -249,6 +281,9 @@ static inline uint16_t mavlink_msg_cas_9line_pack_status(uint32_t system_id, uin
  * @param chan The MAVLink channel this message will be sent over
  * @param msg The MAVLink message to compress the data into
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the attacking aircraft. A flight gets the brief addressed to each of its aircraft. Never 0; receivers ignore a 9-line sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ * @param sequence  Engagement sequence of this brief, chosen by its sender. TERMINAL_CONTROL.sequence refers to it. 0xFFFF is reserved: in a stop it means every brief.
  * @param ip_lat [degE7] Line 1: initial point / battle position latitude, WGS84.
  * @param ip_lon [degE7] Line 1: initial point / battle position longitude, WGS84.
  * @param heading_deg [deg] Line 2: heading (IP to target).
@@ -265,11 +300,12 @@ static inline uint16_t mavlink_msg_cas_9line_pack_status(uint32_t system_id, uin
  * @param final_attack_heading_deg [deg] Remarks: final attack heading (FAH). 0xFFFF if unspecified.
  * @param danger_close  Remarks: 1 = danger close / troops in contact; 0 = not.
  * @param delivery  Bomb-on-coordinate vs bomb-on-target.
+ * @param track_uid  Track UID (see TRACK_IDENTITY) of the target this brief describes. All-zero if not associated with a track.
  * @return length of the message in bytes (excluding serial stream start sign)
  */
 static inline uint16_t mavlink_msg_cas_9line_pack_chan(uint32_t system_id, uint8_t component_id, uint8_t chan,
                                mavlink_message_t* msg,
-                                   uint64_t time_usec,int32_t ip_lat,int32_t ip_lon,uint16_t heading_deg,int16_t offset_deg,uint32_t distance_m,int32_t tgt_elev_m,int32_t tgt_lat,int32_t tgt_lon,uint8_t mark_type,uint8_t laser_code_slot,int32_t friendlies_lat,int32_t friendlies_lon,uint16_t egress_deg,uint16_t final_attack_heading_deg,uint8_t danger_close,uint8_t delivery)
+                                   uint64_t time_usec,uint32_t target_system,uint8_t target_component,uint16_t sequence,int32_t ip_lat,int32_t ip_lon,uint16_t heading_deg,int16_t offset_deg,uint32_t distance_m,int32_t tgt_elev_m,int32_t tgt_lat,int32_t tgt_lon,uint8_t mark_type,uint8_t laser_code_slot,int32_t friendlies_lat,int32_t friendlies_lon,uint16_t egress_deg,uint16_t final_attack_heading_deg,uint8_t danger_close,uint8_t delivery,const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_CAS_9LINE_LEN];
@@ -282,15 +318,18 @@ static inline uint16_t mavlink_msg_cas_9line_pack_chan(uint32_t system_id, uint8
     _mav_put_int32_t(buf, 28, tgt_lon);
     _mav_put_int32_t(buf, 32, friendlies_lat);
     _mav_put_int32_t(buf, 36, friendlies_lon);
-    _mav_put_uint16_t(buf, 40, heading_deg);
-    _mav_put_int16_t(buf, 42, offset_deg);
-    _mav_put_uint16_t(buf, 44, egress_deg);
-    _mav_put_uint16_t(buf, 46, final_attack_heading_deg);
-    _mav_put_uint8_t(buf, 48, mark_type);
-    _mav_put_uint8_t(buf, 49, laser_code_slot);
-    _mav_put_uint8_t(buf, 50, danger_close);
-    _mav_put_uint8_t(buf, 51, delivery);
-
+    _mav_put_uint16_t(buf, 40, sequence);
+    _mav_put_uint16_t(buf, 42, heading_deg);
+    _mav_put_int16_t(buf, 44, offset_deg);
+    _mav_put_uint16_t(buf, 46, egress_deg);
+    _mav_put_uint16_t(buf, 48, final_attack_heading_deg);
+    _mav_put_uint8_t(buf, 50, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 51, target_component);
+    _mav_put_uint8_t(buf, 52, mark_type);
+    _mav_put_uint8_t(buf, 53, laser_code_slot);
+    _mav_put_uint8_t(buf, 54, danger_close);
+    _mav_put_uint8_t(buf, 55, delivery);
+    _mav_put_uint8_t_array(buf, 56, track_uid, 16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_CAS_9LINE_LEN);
 #else
     mavlink_cas_9line_t packet;
@@ -303,20 +342,23 @@ static inline uint16_t mavlink_msg_cas_9line_pack_chan(uint32_t system_id, uint8
     packet.tgt_lon = tgt_lon;
     packet.friendlies_lat = friendlies_lat;
     packet.friendlies_lon = friendlies_lon;
+    packet.sequence = sequence;
     packet.heading_deg = heading_deg;
     packet.offset_deg = offset_deg;
     packet.egress_deg = egress_deg;
     packet.final_attack_heading_deg = final_attack_heading_deg;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.mark_type = mark_type;
     packet.laser_code_slot = laser_code_slot;
     packet.danger_close = danger_close;
     packet.delivery = delivery;
-
+    mav_array_memcpy(packet.track_uid, track_uid, sizeof(uint8_t)*16);
         memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, MAVLINK_MSG_ID_CAS_9LINE_LEN);
 #endif
 
     msg->msgid = MAVLINK_MSG_ID_CAS_9LINE;
-    return mavlink_finalize_message_chan(msg, system_id, component_id, chan, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC);
+    return mavlink_finalize_message_chan_target(msg, system_id, component_id, chan, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC, target_system);
 }
 
 /**
@@ -329,7 +371,7 @@ static inline uint16_t mavlink_msg_cas_9line_pack_chan(uint32_t system_id, uint8
  */
 static inline uint16_t mavlink_msg_cas_9line_encode(uint32_t system_id, uint8_t component_id, mavlink_message_t* msg, const mavlink_cas_9line_t* cas_9line)
 {
-    return mavlink_msg_cas_9line_pack(system_id, component_id, msg, cas_9line->time_usec, cas_9line->ip_lat, cas_9line->ip_lon, cas_9line->heading_deg, cas_9line->offset_deg, cas_9line->distance_m, cas_9line->tgt_elev_m, cas_9line->tgt_lat, cas_9line->tgt_lon, cas_9line->mark_type, cas_9line->laser_code_slot, cas_9line->friendlies_lat, cas_9line->friendlies_lon, cas_9line->egress_deg, cas_9line->final_attack_heading_deg, cas_9line->danger_close, cas_9line->delivery);
+    return mavlink_msg_cas_9line_pack(system_id, component_id, msg, cas_9line->time_usec, cas_9line->target_system, cas_9line->target_component, cas_9line->sequence, cas_9line->ip_lat, cas_9line->ip_lon, cas_9line->heading_deg, cas_9line->offset_deg, cas_9line->distance_m, cas_9line->tgt_elev_m, cas_9line->tgt_lat, cas_9line->tgt_lon, cas_9line->mark_type, cas_9line->laser_code_slot, cas_9line->friendlies_lat, cas_9line->friendlies_lon, cas_9line->egress_deg, cas_9line->final_attack_heading_deg, cas_9line->danger_close, cas_9line->delivery, cas_9line->track_uid);
 }
 
 /**
@@ -343,7 +385,7 @@ static inline uint16_t mavlink_msg_cas_9line_encode(uint32_t system_id, uint8_t 
  */
 static inline uint16_t mavlink_msg_cas_9line_encode_chan(uint32_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, const mavlink_cas_9line_t* cas_9line)
 {
-    return mavlink_msg_cas_9line_pack_chan(system_id, component_id, chan, msg, cas_9line->time_usec, cas_9line->ip_lat, cas_9line->ip_lon, cas_9line->heading_deg, cas_9line->offset_deg, cas_9line->distance_m, cas_9line->tgt_elev_m, cas_9line->tgt_lat, cas_9line->tgt_lon, cas_9line->mark_type, cas_9line->laser_code_slot, cas_9line->friendlies_lat, cas_9line->friendlies_lon, cas_9line->egress_deg, cas_9line->final_attack_heading_deg, cas_9line->danger_close, cas_9line->delivery);
+    return mavlink_msg_cas_9line_pack_chan(system_id, component_id, chan, msg, cas_9line->time_usec, cas_9line->target_system, cas_9line->target_component, cas_9line->sequence, cas_9line->ip_lat, cas_9line->ip_lon, cas_9line->heading_deg, cas_9line->offset_deg, cas_9line->distance_m, cas_9line->tgt_elev_m, cas_9line->tgt_lat, cas_9line->tgt_lon, cas_9line->mark_type, cas_9line->laser_code_slot, cas_9line->friendlies_lat, cas_9line->friendlies_lon, cas_9line->egress_deg, cas_9line->final_attack_heading_deg, cas_9line->danger_close, cas_9line->delivery, cas_9line->track_uid);
 }
 
 /**
@@ -357,7 +399,7 @@ static inline uint16_t mavlink_msg_cas_9line_encode_chan(uint32_t system_id, uin
  */
 static inline uint16_t mavlink_msg_cas_9line_encode_status(uint32_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_cas_9line_t* cas_9line)
 {
-    return mavlink_msg_cas_9line_pack_status(system_id, component_id, _status, msg,  cas_9line->time_usec, cas_9line->ip_lat, cas_9line->ip_lon, cas_9line->heading_deg, cas_9line->offset_deg, cas_9line->distance_m, cas_9line->tgt_elev_m, cas_9line->tgt_lat, cas_9line->tgt_lon, cas_9line->mark_type, cas_9line->laser_code_slot, cas_9line->friendlies_lat, cas_9line->friendlies_lon, cas_9line->egress_deg, cas_9line->final_attack_heading_deg, cas_9line->danger_close, cas_9line->delivery);
+    return mavlink_msg_cas_9line_pack_status(system_id, component_id, _status, msg,  cas_9line->time_usec, cas_9line->target_system, cas_9line->target_component, cas_9line->sequence, cas_9line->ip_lat, cas_9line->ip_lon, cas_9line->heading_deg, cas_9line->offset_deg, cas_9line->distance_m, cas_9line->tgt_elev_m, cas_9line->tgt_lat, cas_9line->tgt_lon, cas_9line->mark_type, cas_9line->laser_code_slot, cas_9line->friendlies_lat, cas_9line->friendlies_lon, cas_9line->egress_deg, cas_9line->final_attack_heading_deg, cas_9line->danger_close, cas_9line->delivery, cas_9line->track_uid);
 }
 
 /**
@@ -365,6 +407,9 @@ static inline uint16_t mavlink_msg_cas_9line_encode_status(uint32_t system_id, u
  * @param chan MAVLink channel to send the message
  *
  * @param time_usec [us] Timestamp (UNIX epoch, microseconds UTC).
+ * @param target_system  System ID of the intended recipient: the attacking aircraft. A flight gets the brief addressed to each of its aircraft. Never 0; receivers ignore a 9-line sent to every system.
+ * @param target_component  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ * @param sequence  Engagement sequence of this brief, chosen by its sender. TERMINAL_CONTROL.sequence refers to it. 0xFFFF is reserved: in a stop it means every brief.
  * @param ip_lat [degE7] Line 1: initial point / battle position latitude, WGS84.
  * @param ip_lon [degE7] Line 1: initial point / battle position longitude, WGS84.
  * @param heading_deg [deg] Line 2: heading (IP to target).
@@ -381,10 +426,11 @@ static inline uint16_t mavlink_msg_cas_9line_encode_status(uint32_t system_id, u
  * @param final_attack_heading_deg [deg] Remarks: final attack heading (FAH). 0xFFFF if unspecified.
  * @param danger_close  Remarks: 1 = danger close / troops in contact; 0 = not.
  * @param delivery  Bomb-on-coordinate vs bomb-on-target.
+ * @param track_uid  Track UID (see TRACK_IDENTITY) of the target this brief describes. All-zero if not associated with a track.
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
-static inline void mavlink_msg_cas_9line_send(mavlink_channel_t chan, uint64_t time_usec, int32_t ip_lat, int32_t ip_lon, uint16_t heading_deg, int16_t offset_deg, uint32_t distance_m, int32_t tgt_elev_m, int32_t tgt_lat, int32_t tgt_lon, uint8_t mark_type, uint8_t laser_code_slot, int32_t friendlies_lat, int32_t friendlies_lon, uint16_t egress_deg, uint16_t final_attack_heading_deg, uint8_t danger_close, uint8_t delivery)
+static inline void mavlink_msg_cas_9line_send(mavlink_channel_t chan, uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint16_t sequence, int32_t ip_lat, int32_t ip_lon, uint16_t heading_deg, int16_t offset_deg, uint32_t distance_m, int32_t tgt_elev_m, int32_t tgt_lat, int32_t tgt_lon, uint8_t mark_type, uint8_t laser_code_slot, int32_t friendlies_lat, int32_t friendlies_lon, uint16_t egress_deg, uint16_t final_attack_heading_deg, uint8_t danger_close, uint8_t delivery, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char buf[MAVLINK_MSG_ID_CAS_9LINE_LEN];
@@ -397,16 +443,19 @@ static inline void mavlink_msg_cas_9line_send(mavlink_channel_t chan, uint64_t t
     _mav_put_int32_t(buf, 28, tgt_lon);
     _mav_put_int32_t(buf, 32, friendlies_lat);
     _mav_put_int32_t(buf, 36, friendlies_lon);
-    _mav_put_uint16_t(buf, 40, heading_deg);
-    _mav_put_int16_t(buf, 42, offset_deg);
-    _mav_put_uint16_t(buf, 44, egress_deg);
-    _mav_put_uint16_t(buf, 46, final_attack_heading_deg);
-    _mav_put_uint8_t(buf, 48, mark_type);
-    _mav_put_uint8_t(buf, 49, laser_code_slot);
-    _mav_put_uint8_t(buf, 50, danger_close);
-    _mav_put_uint8_t(buf, 51, delivery);
-
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CAS_9LINE, buf, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC);
+    _mav_put_uint16_t(buf, 40, sequence);
+    _mav_put_uint16_t(buf, 42, heading_deg);
+    _mav_put_int16_t(buf, 44, offset_deg);
+    _mav_put_uint16_t(buf, 46, egress_deg);
+    _mav_put_uint16_t(buf, 48, final_attack_heading_deg);
+    _mav_put_uint8_t(buf, 50, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 51, target_component);
+    _mav_put_uint8_t(buf, 52, mark_type);
+    _mav_put_uint8_t(buf, 53, laser_code_slot);
+    _mav_put_uint8_t(buf, 54, danger_close);
+    _mav_put_uint8_t(buf, 55, delivery);
+    _mav_put_uint8_t_array(buf, 56, track_uid, 16);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_CAS_9LINE, buf, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC, target_system);
 #else
     mavlink_cas_9line_t packet;
     packet.time_usec = time_usec;
@@ -418,16 +467,19 @@ static inline void mavlink_msg_cas_9line_send(mavlink_channel_t chan, uint64_t t
     packet.tgt_lon = tgt_lon;
     packet.friendlies_lat = friendlies_lat;
     packet.friendlies_lon = friendlies_lon;
+    packet.sequence = sequence;
     packet.heading_deg = heading_deg;
     packet.offset_deg = offset_deg;
     packet.egress_deg = egress_deg;
     packet.final_attack_heading_deg = final_attack_heading_deg;
+    packet.target_system = mavlink_msg_target_field(target_system);
+    packet.target_component = target_component;
     packet.mark_type = mark_type;
     packet.laser_code_slot = laser_code_slot;
     packet.danger_close = danger_close;
     packet.delivery = delivery;
-
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CAS_9LINE, (const char *)&packet, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC);
+    mav_array_memcpy(packet.track_uid, track_uid, sizeof(uint8_t)*16);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_CAS_9LINE, (const char *)&packet, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC, target_system);
 #endif
 }
 
@@ -439,7 +491,7 @@ static inline void mavlink_msg_cas_9line_send(mavlink_channel_t chan, uint64_t t
 static inline void mavlink_msg_cas_9line_send_struct(mavlink_channel_t chan, const mavlink_cas_9line_t* cas_9line)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
-    mavlink_msg_cas_9line_send(chan, cas_9line->time_usec, cas_9line->ip_lat, cas_9line->ip_lon, cas_9line->heading_deg, cas_9line->offset_deg, cas_9line->distance_m, cas_9line->tgt_elev_m, cas_9line->tgt_lat, cas_9line->tgt_lon, cas_9line->mark_type, cas_9line->laser_code_slot, cas_9line->friendlies_lat, cas_9line->friendlies_lon, cas_9line->egress_deg, cas_9line->final_attack_heading_deg, cas_9line->danger_close, cas_9line->delivery);
+    mavlink_msg_cas_9line_send(chan, cas_9line->time_usec, cas_9line->target_system, cas_9line->target_component, cas_9line->sequence, cas_9line->ip_lat, cas_9line->ip_lon, cas_9line->heading_deg, cas_9line->offset_deg, cas_9line->distance_m, cas_9line->tgt_elev_m, cas_9line->tgt_lat, cas_9line->tgt_lon, cas_9line->mark_type, cas_9line->laser_code_slot, cas_9line->friendlies_lat, cas_9line->friendlies_lon, cas_9line->egress_deg, cas_9line->final_attack_heading_deg, cas_9line->danger_close, cas_9line->delivery, cas_9line->track_uid);
 #else
     _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CAS_9LINE, (const char *)cas_9line, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC);
 #endif
@@ -453,7 +505,7 @@ static inline void mavlink_msg_cas_9line_send_struct(mavlink_channel_t chan, con
   is usually the receive buffer for the channel, and allows a reply to an
   incoming message with minimum stack space usage.
  */
-static inline void mavlink_msg_cas_9line_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint64_t time_usec, int32_t ip_lat, int32_t ip_lon, uint16_t heading_deg, int16_t offset_deg, uint32_t distance_m, int32_t tgt_elev_m, int32_t tgt_lat, int32_t tgt_lon, uint8_t mark_type, uint8_t laser_code_slot, int32_t friendlies_lat, int32_t friendlies_lon, uint16_t egress_deg, uint16_t final_attack_heading_deg, uint8_t danger_close, uint8_t delivery)
+static inline void mavlink_msg_cas_9line_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint64_t time_usec, uint32_t target_system, uint8_t target_component, uint16_t sequence, int32_t ip_lat, int32_t ip_lon, uint16_t heading_deg, int16_t offset_deg, uint32_t distance_m, int32_t tgt_elev_m, int32_t tgt_lat, int32_t tgt_lon, uint8_t mark_type, uint8_t laser_code_slot, int32_t friendlies_lat, int32_t friendlies_lon, uint16_t egress_deg, uint16_t final_attack_heading_deg, uint8_t danger_close, uint8_t delivery, const uint8_t *track_uid)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
     char *buf = (char *)msgbuf;
@@ -466,16 +518,19 @@ static inline void mavlink_msg_cas_9line_send_buf(mavlink_message_t *msgbuf, mav
     _mav_put_int32_t(buf, 28, tgt_lon);
     _mav_put_int32_t(buf, 32, friendlies_lat);
     _mav_put_int32_t(buf, 36, friendlies_lon);
-    _mav_put_uint16_t(buf, 40, heading_deg);
-    _mav_put_int16_t(buf, 42, offset_deg);
-    _mav_put_uint16_t(buf, 44, egress_deg);
-    _mav_put_uint16_t(buf, 46, final_attack_heading_deg);
-    _mav_put_uint8_t(buf, 48, mark_type);
-    _mav_put_uint8_t(buf, 49, laser_code_slot);
-    _mav_put_uint8_t(buf, 50, danger_close);
-    _mav_put_uint8_t(buf, 51, delivery);
-
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CAS_9LINE, buf, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC);
+    _mav_put_uint16_t(buf, 40, sequence);
+    _mav_put_uint16_t(buf, 42, heading_deg);
+    _mav_put_int16_t(buf, 44, offset_deg);
+    _mav_put_uint16_t(buf, 46, egress_deg);
+    _mav_put_uint16_t(buf, 48, final_attack_heading_deg);
+    _mav_put_uint8_t(buf, 50, mavlink_msg_target_field(target_system));
+    _mav_put_uint8_t(buf, 51, target_component);
+    _mav_put_uint8_t(buf, 52, mark_type);
+    _mav_put_uint8_t(buf, 53, laser_code_slot);
+    _mav_put_uint8_t(buf, 54, danger_close);
+    _mav_put_uint8_t(buf, 55, delivery);
+    _mav_put_uint8_t_array(buf, 56, track_uid, 16);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_CAS_9LINE, buf, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC, target_system);
 #else
     mavlink_cas_9line_t *packet = (mavlink_cas_9line_t *)msgbuf;
     packet->time_usec = time_usec;
@@ -487,16 +542,19 @@ static inline void mavlink_msg_cas_9line_send_buf(mavlink_message_t *msgbuf, mav
     packet->tgt_lon = tgt_lon;
     packet->friendlies_lat = friendlies_lat;
     packet->friendlies_lon = friendlies_lon;
+    packet->sequence = sequence;
     packet->heading_deg = heading_deg;
     packet->offset_deg = offset_deg;
     packet->egress_deg = egress_deg;
     packet->final_attack_heading_deg = final_attack_heading_deg;
+    packet->target_system = mavlink_msg_target_field(target_system);
+    packet->target_component = target_component;
     packet->mark_type = mark_type;
     packet->laser_code_slot = laser_code_slot;
     packet->danger_close = danger_close;
     packet->delivery = delivery;
-
-    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_CAS_9LINE, (const char *)packet, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC);
+    mav_array_memcpy(packet->track_uid, track_uid, sizeof(uint8_t)*16);
+    _mav_finalize_message_chan_send_target(chan, MAVLINK_MSG_ID_CAS_9LINE, (const char *)packet, MAVLINK_MSG_ID_CAS_9LINE_MIN_LEN, MAVLINK_MSG_ID_CAS_9LINE_LEN, MAVLINK_MSG_ID_CAS_9LINE_CRC, target_system);
 #endif
 }
 #endif
@@ -514,6 +572,26 @@ static inline void mavlink_msg_cas_9line_send_buf(mavlink_message_t *msgbuf, mav
 static inline uint64_t mavlink_msg_cas_9line_get_time_usec(const mavlink_message_t* msg)
 {
     return _MAV_RETURN_uint64_t(msg,  0);
+}
+
+/**
+ * @brief Get field target_component from cas_9line message
+ *
+ * @return  Component ID of the intended recipient within target_system. 0 = every component of that system. Ignored when target_system is 0.
+ */
+static inline uint8_t mavlink_msg_cas_9line_get_target_component(const mavlink_message_t* msg)
+{
+    return _MAV_RETURN_uint8_t(msg,  51);
+}
+
+/**
+ * @brief Get field sequence from cas_9line message
+ *
+ * @return  Engagement sequence of this brief, chosen by its sender. TERMINAL_CONTROL.sequence refers to it. 0xFFFF is reserved: in a stop it means every brief.
+ */
+static inline uint16_t mavlink_msg_cas_9line_get_sequence(const mavlink_message_t* msg)
+{
+    return _MAV_RETURN_uint16_t(msg,  40);
 }
 
 /**
@@ -543,7 +621,7 @@ static inline int32_t mavlink_msg_cas_9line_get_ip_lon(const mavlink_message_t* 
  */
 static inline uint16_t mavlink_msg_cas_9line_get_heading_deg(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint16_t(msg,  40);
+    return _MAV_RETURN_uint16_t(msg,  42);
 }
 
 /**
@@ -553,7 +631,7 @@ static inline uint16_t mavlink_msg_cas_9line_get_heading_deg(const mavlink_messa
  */
 static inline int16_t mavlink_msg_cas_9line_get_offset_deg(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_int16_t(msg,  42);
+    return _MAV_RETURN_int16_t(msg,  44);
 }
 
 /**
@@ -603,7 +681,7 @@ static inline int32_t mavlink_msg_cas_9line_get_tgt_lon(const mavlink_message_t*
  */
 static inline uint8_t mavlink_msg_cas_9line_get_mark_type(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  48);
+    return _MAV_RETURN_uint8_t(msg,  52);
 }
 
 /**
@@ -613,7 +691,7 @@ static inline uint8_t mavlink_msg_cas_9line_get_mark_type(const mavlink_message_
  */
 static inline uint8_t mavlink_msg_cas_9line_get_laser_code_slot(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  49);
+    return _MAV_RETURN_uint8_t(msg,  53);
 }
 
 /**
@@ -643,7 +721,7 @@ static inline int32_t mavlink_msg_cas_9line_get_friendlies_lon(const mavlink_mes
  */
 static inline uint16_t mavlink_msg_cas_9line_get_egress_deg(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint16_t(msg,  44);
+    return _MAV_RETURN_uint16_t(msg,  46);
 }
 
 /**
@@ -653,7 +731,7 @@ static inline uint16_t mavlink_msg_cas_9line_get_egress_deg(const mavlink_messag
  */
 static inline uint16_t mavlink_msg_cas_9line_get_final_attack_heading_deg(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint16_t(msg,  46);
+    return _MAV_RETURN_uint16_t(msg,  48);
 }
 
 /**
@@ -663,7 +741,7 @@ static inline uint16_t mavlink_msg_cas_9line_get_final_attack_heading_deg(const 
  */
 static inline uint8_t mavlink_msg_cas_9line_get_danger_close(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  50);
+    return _MAV_RETURN_uint8_t(msg,  54);
 }
 
 /**
@@ -673,7 +751,17 @@ static inline uint8_t mavlink_msg_cas_9line_get_danger_close(const mavlink_messa
  */
 static inline uint8_t mavlink_msg_cas_9line_get_delivery(const mavlink_message_t* msg)
 {
-    return _MAV_RETURN_uint8_t(msg,  51);
+    return _MAV_RETURN_uint8_t(msg,  55);
+}
+
+/**
+ * @brief Get field track_uid from cas_9line message
+ *
+ * @return  Track UID (see TRACK_IDENTITY) of the target this brief describes. All-zero if not associated with a track.
+ */
+static inline uint16_t mavlink_msg_cas_9line_get_track_uid(const mavlink_message_t* msg, uint8_t *track_uid)
+{
+    return _MAV_RETURN_uint8_t_array(msg, track_uid, 16,  56);
 }
 
 /**
@@ -694,18 +782,28 @@ static inline void mavlink_msg_cas_9line_decode(const mavlink_message_t* msg, ma
     cas_9line->tgt_lon = mavlink_msg_cas_9line_get_tgt_lon(msg);
     cas_9line->friendlies_lat = mavlink_msg_cas_9line_get_friendlies_lat(msg);
     cas_9line->friendlies_lon = mavlink_msg_cas_9line_get_friendlies_lon(msg);
+    cas_9line->sequence = mavlink_msg_cas_9line_get_sequence(msg);
     cas_9line->heading_deg = mavlink_msg_cas_9line_get_heading_deg(msg);
     cas_9line->offset_deg = mavlink_msg_cas_9line_get_offset_deg(msg);
     cas_9line->egress_deg = mavlink_msg_cas_9line_get_egress_deg(msg);
     cas_9line->final_attack_heading_deg = mavlink_msg_cas_9line_get_final_attack_heading_deg(msg);
+    cas_9line->target_system = _MAV_RETURN_uint8_t(msg, 50);
+    cas_9line->target_component = mavlink_msg_cas_9line_get_target_component(msg);
     cas_9line->mark_type = mavlink_msg_cas_9line_get_mark_type(msg);
     cas_9line->laser_code_slot = mavlink_msg_cas_9line_get_laser_code_slot(msg);
     cas_9line->danger_close = mavlink_msg_cas_9line_get_danger_close(msg);
     cas_9line->delivery = mavlink_msg_cas_9line_get_delivery(msg);
+    mavlink_msg_cas_9line_get_track_uid(msg, cas_9line->track_uid);
 #else
         uint8_t len = msg->len < MAVLINK_MSG_ID_CAS_9LINE_LEN? msg->len : MAVLINK_MSG_ID_CAS_9LINE_LEN;
         memset(cas_9line, 0, MAVLINK_MSG_ID_CAS_9LINE_LEN);
     memcpy(cas_9line, _MAV_PAYLOAD(msg), len);
 #endif
+    if (msg->incompat_flags & MAVLINK_IFLAG_TARGET32) {
+        // This uint8_t field cannot retain a wide target. The sentinel is NOT reserved.
+        // For routing use mavlink_msg_get_target_sysid(msg, mavlink_get_msg_entry(msg->msgid)).
+        // To relay after edits, pass that full target to _pack*(); _encode*() loses it.
+        cas_9line->target_system = mavlink_msg_target_field(msg->target_sysid);
+    }
 
 }
